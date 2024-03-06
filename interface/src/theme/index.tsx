@@ -59,11 +59,11 @@ export function colors(darkMode: boolean): Colors {
     advancedBG: darkMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.6)',
 
     //primary colors
-    primary1: darkMode ? '#9BCF53' : '#27AE60',
-    primary2: darkMode ? '#3680E7' : '#FF8CC3',
+    primary1: darkMode ? '#5ced73' : '#27AE60',
+    primary2: darkMode ? '#e3ffef' : '#07db60',
     primary3: darkMode ? '#4D8FEA' : '#FF99C9',
     primary4: darkMode ? '#376bad70' : '#F6DDE8',
-    primary5: darkMode ? '#153d6f70' : '#FDEAF1',
+    primary5: darkMode ? '#5ced73' : '#e3ffef',
 
     // color text
     primaryText1: darkMode ? '#6da8ff' : '#ff007a',
@@ -211,10 +211,10 @@ html {
 
 body {
   min-height: 100vh;
-  background-position: 0 -30vh;
+  background-position: 0 -5vh;
   background-repeat: no-repeat;
   background-image: ${({ theme }) =>
-    `radial-gradient(50% 50% at 50% 50%, ${transparentize(0.9, theme.primary1)} 0%, ${transparentize(
+    `radial-gradient(63% 46% at 50% 50%, ${transparentize(0.5, theme.primary1)} 0%, ${transparentize(
       1,
       theme.bg1
     )} 100%)`};

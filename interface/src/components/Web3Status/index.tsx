@@ -59,28 +59,29 @@ const Web3StatusError = styled(Web3StatusGeneric)`
 `
 
 const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
-  background-color: ${({ theme }) => theme.primary4};
+  background-color: ${({ theme }) => theme.primary1};
   border: none;
   color: ${({ theme }) => theme.primaryText1};
   font-weight: 500;
 
   :hover,
   :focus {
-    border: 1px solid ${({ theme }) => darken(0.05, theme.primary4)};
+    border: 1px solid ${({ theme }) => darken(0.05, theme.primary1)};
     color: ${({ theme }) => theme.primaryText1};
   }
 
   ${({ faded }) =>
     faded &&
     css`
-      background-color: ${({ theme }) => theme.primary5};
-      border: 1px solid ${({ theme }) => theme.primary5};
-      color: ${({ theme }) => theme.primaryText1};
+      background-color: ${({ theme }) => theme.primary1};
+      border: 1px solid ${({ theme }) => theme.primary1};
+      color: ${({ theme }) => theme.bg1};
 
       :hover,
       :focus {
-        border: 1px solid ${({ theme }) => darken(0.05, theme.primary4)};
-        color: ${({ theme }) => darken(0.05, theme.primaryText1)};
+      background-color: ${({ theme }) => theme.primary1};
+        border: 1px solid ${({ theme }) => darken(0.05, theme.primary1)};
+        color: ${({ theme }) => darken(0.05, theme.bg1)};
       }
     `}
 `
@@ -201,7 +202,6 @@ function Web3StatusInner() {
       <Web3StatusError onClick={toggleWalletModal}>
         <NetworkIcon />
         <Text>{error instanceof UnsupportedChainIdError ? 'Wrong Network' : 'Error'}</Text>
-        
       </Web3StatusError>
     )
   } else {

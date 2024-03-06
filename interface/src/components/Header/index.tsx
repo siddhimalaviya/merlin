@@ -20,6 +20,8 @@ import Menu from '../Menu'
 import Row, { RowBetween } from '../Row'
 import Web3Status from '../Web3Status'
 import VersionSwitch from './VersionSwitch'
+import { Link, useLocation } from 'react-router-dom'
+import { Button } from '../../theme'
 
 const HeaderFrame = styled.div`
   display: flex;
@@ -126,13 +128,32 @@ const BalanceText = styled(Text)`
   `};
 `
 
+interface StyledLinkProps {
+  isActive: boolean;
+}
+
+const StyledLink = styled(Link)<StyledLinkProps>`
+  text-decoration: none;
+  margin-left:30px;
+  ${({ isActive, theme }) => isActive && `
+    color: ${theme.bg1} /* Set color when active */
+  `}
+`;
+
+const LinkText = styled.div<StyledLinkProps>`
+  color: ${({ theme, isActive }) => (!isActive ? theme.black : theme.primary1)};
+  font-weight:600;
+  text-decoration: none;
+  
+`;
+
 const NETWORK_LABELS: { [chainId in ChainId]: string | null } = {
   [ChainId.MAINNET]: 'Ethereum',
   [ChainId.RINKEBY]: 'Rinkeby',
   [ChainId.ROPSTEN]: 'Ropsten',
   [ChainId.GÖRLI]: 'Görli',
   [ChainId.KOVAN]: 'Kovan',
-  [ChainId.SEPOLIA]:'Sepolia',
+  [ChainId.SEPOLIA]: 'Sepolia',
   [ChainId.MERLIN]:'Merlin'
 }
 
@@ -142,9 +163,15 @@ export default function Header() {
   const userEthBalance = useETHBalances(account ? [account] : [])?.[account ?? '']
   const [isDark] = useDarkModeManager()
 
+  const location = useLocation();
+
+  // Check if the current location matches the link's destination
+  const isActive = location.pathname === '/farms';
+  
+
   return (
     <HeaderFrame>
-      <RowBetween style={{ alignItems: 'flex-start' }} padding="1rem 1rem 0 1rem">
+      <RowBetween padding="1rem 1rem 0 1rem">
         <HeaderElement>
           <Title href=".">
             <UniIcon>
@@ -153,7 +180,11 @@ export default function Header() {
             <TitleText>
               <img style={{ marginLeft: '4px', marginTop: '4px' }} src={isDark ? WordmarkDark : Wordmark} alt="logo" />
             </TitleText>
+
           </Title>
+            <StyledLink to="/farms" isActive={isActive}>
+              <LinkText isActive={isActive}>Liquidity Pools</LinkText>
+            </StyledLink>
         </HeaderElement>
         <HeaderControls>
           <HeaderElement>
@@ -163,14 +194,14 @@ export default function Header() {
             <AccountElement active={!!account} style={{ pointerEvents: 'auto' }}>
               {account && userEthBalance ? (
                 <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
-                  {userEthBalance?.toSignificant(4)} 
+                  {userEthBalance?.toSignificant(4)} ETH
                 </BalanceText>
               ) : null}
               <Web3Status />
             </AccountElement>
           </HeaderElement>
           <HeaderElementWrap>
-            <VersionSwitch />
+            {/* <VersionSwitch /> */}
             <Settings />
             <Menu />
           </HeaderElementWrap>
