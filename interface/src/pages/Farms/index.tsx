@@ -81,7 +81,7 @@ export default function Farms() {
     th {
       padding-left:10px;
       font-size: 12px;
-      font-weight:300;
+      font-weight:500;
       color: ${({ theme }) => theme.primary1}
     },
     td {
@@ -93,14 +93,14 @@ export default function Farms() {
   `;
 
   const Card = styled.div`
-    background-color: #fff;
+    background-color :${({theme})=>(theme.bg1)}
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border-radius: 3rem;
     margin-bottom: 1rem;
   `;
 
   const StyledPercentageBadge = styled.div`
-    border: 1px solid #a020f0;
+    border: 1px solid #aaaaaa;
     border-radius: 10px;
     padding: 2px;
   `;
@@ -124,7 +124,8 @@ export default function Farms() {
   `;
 
   const StyledBlackBorderDiv = styled.div<{ open: boolean }>`
-    background: #F6F6F6;
+  background-color :${({theme})=>(theme.bg2)}
+
     padding: 10px;
     opacity: ${({ open }) => (open ? '1' : '0')};
     animation: ${({ open }) => (open ? fadeIn : fadeOut)} 0.5s ease;
@@ -154,7 +155,7 @@ export default function Farms() {
 
   const StyledRightColumn = styled.div`
     width: 100%;
-    border: 2px solid #AC7ED7;
+    border: 1px solid #aaaaaa;
     border-radius: 10px;
     padding: 10px 15px;
   `;
@@ -168,7 +169,8 @@ export default function Farms() {
   const StyledParagraph = styled.p`
     margin-bottom: 0; /* Remove default bottom margin for paragraphs */
     font-weight: bold;
-    color: #7A6EAA
+    color:${({theme})=>(theme.text2)}
+
   `;
 
   const StyledButton = styled.button`
@@ -188,7 +190,7 @@ export default function Farms() {
 `;
 
   const StyledMobilePercentageBadge = styled.div`
-  border: 1px solid #a020f0;
+  border: 1px solid #aaaaaa;
   border-radius: 10px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
