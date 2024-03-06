@@ -27,16 +27,22 @@ import Modal from '../../components/Modal';
 import { useActionModalToggle, useActiontModalOpen } from '../../state/actionButton/hooks';
 import Input from '../../components/NumericalInput';
 import { Button } from '../../theme';
+import { ethers } from 'ethers';
 
 export default function Farms() {
   const [accordionOpen, setAccordionOpen] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [actionValue, setActionValue] = useState('');
+  const [address, setAddress] = useState('');
+  const [balance, setBalance] = useState('');
 
   const Container = styled.div`
     width:180vh;
     margin:auto;
+    @media (max-width: 1440px) {
+      width: 160vh; /* Adjust padding for smaller screens */
+    }
     @media (max-width: 1024px) {
       width: 150vh; /* Adjust padding for smaller screens */
     }
@@ -124,8 +130,9 @@ export default function Farms() {
   `;
 
   const StyledBlackBorderDiv = styled.div<{ open: boolean }>`
-    background: #F6F6F6;
+  background-color :${({ theme }) => (theme.bg2)}
     padding: 10px;
+    border-radius:10px;
     opacity: ${({ open }) => (open ? '1' : '0')};
     animation: ${({ open }) => (open ? fadeIn : fadeOut)} 0.5s ease;
     &:last-child {
@@ -154,7 +161,7 @@ export default function Farms() {
 
   const StyledRightColumn = styled.div`
     width: 100%;
-    border: 2px solid #AC7ED7;
+    border: 2px solid ${({ theme }) => (theme.text3)};
     border-radius: 10px;
     padding: 10px 15px;
   `;
@@ -168,7 +175,7 @@ export default function Farms() {
   const StyledParagraph = styled.p`
     margin-bottom: 0; /* Remove default bottom margin for paragraphs */
     font-weight: bold;
-    color: #7A6EAA
+    color:${({ theme }) => (theme.text2)}
   `;
 
   const StyledButton = styled.button`
@@ -188,7 +195,7 @@ export default function Farms() {
 `;
 
   const StyledMobilePercentageBadge = styled.div`
-  border: 1px solid #a020f0;
+  border: 1px solid #aaaaaa;
   border-radius: 10px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
@@ -217,7 +224,7 @@ export default function Farms() {
 
   const MobileMainCard = styled.div`
   border-radius: 3rem;
-  background: white;
+  background-color :${({ theme }) => (theme.bg1)}
   width:40rem;
   @media (max-width: 768px) {
     width: 40rem; /* Adjust padding for smaller screens */
@@ -409,9 +416,20 @@ ${({ faded }) =>
   `};
 `
 
+  const RewardRow = styled.div`
+${({ theme }) => theme.flexRowNoWrap};
+padding: 1rem 1rem;
+font-weight: 500;
+font-size:18px;
+color: ${props => (props.color === 'blue' ? ({ theme }) => theme.primary1 : 'inherit')};
+${({ theme }) => theme.mediaWidth.upToMedium`
+  padding: 1rem;
+`};
+`
+
   const ContentWrapper = styled.div`
   background-color: ${({ theme }) => theme.bg2};
-  padding: 2rem;
+  padding: 1rem;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
 
@@ -427,10 +445,11 @@ ${({ faded }) =>
 
   const StyledInput = styled.input`
   border-radius: 10px;
-  padding: 17px;
+  padding: 12px;
   margin: 20px 0px;
   width: 100%;
-  font-size: medium;
+  font-size: 17px;
+  font-weight : bold;
   border: 1px solid gray;
   :hover,
   :focus {
@@ -486,6 +505,69 @@ ${({ faded }) =>
     setActionValue(action)
   }
 
+  const Input = styled.input`
+  border: 0;
+  border-radius: 10px;
+  color: white;
+  padding: 20px;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: white;
+  }
+`;
+
+  // Button styled component
+  const Button = styled.button`
+  background: #e5e7e7;
+  border: 0;
+  border-radius: 7px;
+  color:${({theme})=>(theme.text1)};
+  display: flex;
+  padding: 5px 10px;
+`;
+
+  // Wrapper for form submission
+  const FormWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  width: 100%;
+`;
+
+  const ActionButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+
+   ${({ theme }) => theme.mediaWidth.upToSmall`
+    flex-direction: column;
+    align-items: center;
+  `}
+`;
+
+  const ButtonContainer = styled.div`
+  display: flex;
+  width: 40%;
+
+  ${({ theme }) => theme.mediaWidth.upToSmall`
+    width: 100%;
+    margin-bottom: 10px;
+  `}
+`;
+
+  const SingleButtonContainer = styled.div`
+  display: flex;
+  width: 20%;
+
+   ${({ theme }) => theme.mediaWidth.upToSmall`
+    width: 100%;
+  `}
+`;
+
 
 
   function Web3StatusInner() {
@@ -522,15 +604,15 @@ ${({ faded }) =>
         //   )}
         //   {/* {!hasPendingTransactions && connector && <StatusIcon connector={connector} />} */}
         // </Web3StatusConnected>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-          <div style={{ display: 'flex' , width:'40%'}}>
+        <ActionButtonContainer>
+          <ButtonContainer>
             <ActionButton onClick={() => handleModal('Stack')}>Stack</ActionButton>
             <ActionButton onClick={() => handleModal('Unstack')}>Unstack</ActionButton>
-          </div>
-          <div style={{ display: 'flex' , width:'20%'}}>
-          <ActionButton onClick={() => handleModal('Harvest')}>Harvest</ActionButton>
-          </div>
-        </div>
+          </ButtonContainer>
+          <SingleButtonContainer>
+            <ActionButton onClick={() => handleModal('Harvest')}>Harvest</ActionButton>
+          </SingleButtonContainer>
+        </ActionButtonContainer>
       )
     } else if (error) {
       return (
@@ -558,6 +640,28 @@ ${({ faded }) =>
     setWindowWidth(window.innerWidth);
   };
 
+
+  useEffect(() => {
+    const address = '0xc8cD058Cb7B46fe9e2d12cF23Add61434Bad9d30';
+    const getBalance = async () => {
+      try {
+        // Initialize ethers provider using MetaMask
+        const provider = new ethers.providers.Web3Provider((window as any).ethereum);
+        // Fetch balance
+        const balanceWei = await provider.getBalance(address);
+        // Convert balance from Wei to Ether
+        const formattedBalance = ethers.utils.formatEther(balanceWei);
+        console.log(formattedBalance);
+
+        setBalance(formattedBalance);
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        setBalance("0");
+      }
+    };
+
+    getBalance();
+  }, [address]);
 
 
   useEffect(() => {
@@ -591,14 +695,18 @@ ${({ faded }) =>
 
         {actionValue === 'Harvest' ?
           <ContentWrapper>
-            <HeaderRow>Available Reward :</HeaderRow>
+            <RewardRow>Available Reward :</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <ActionButton>{actionValue}</ActionButton>
             </div>
           </ContentWrapper>
           :
           <ContentWrapper>
-            <StyledInput  placeholder={`Enter ${actionValue} Amount`}/>
+            <div style={{ display: 'flex', justifyContent:'flex-end' }}>
+              <Button>Available Balance : {Number(balance).toFixed(5)}</Button>
+            </div>
+            {/* <Input placeholder="Enter something..." /> */}
+            <StyledInput placeholder={`Enter ${actionValue} Amount`} />
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <ActionButton>{actionValue}</ActionButton>
             </div>

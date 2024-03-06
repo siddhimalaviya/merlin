@@ -58,7 +58,7 @@ const Web3StatusError = styled(Web3StatusGeneric)`
   }
 `
 
-const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
+const Web3StatusConnect = styled(Web3StatusGeneric) <{ faded?: boolean }>`
   background-color: ${({ theme }) => theme.primary1};
   border: none;
   color: ${({ theme }) => theme.primaryText1};
@@ -84,9 +84,12 @@ const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
         color: ${({ theme }) => darken(0.05, theme.bg1)};
       }
     `}
+    ${({ theme }) => theme.mediaWidth.upToSmall`
+    display: none;
+  `};
 `
 
-const Web3StatusConnected = styled(Web3StatusGeneric)<{ pending?: boolean }>`
+const Web3StatusConnected = styled(Web3StatusGeneric) <{ pending?: boolean }>`
   background-color: ${({ pending, theme }) => (pending ? theme.primary1 : theme.bg2)};
   border: 1px solid ${({ pending, theme }) => (pending ? theme.primary1 : theme.bg3)};
   color: ${({ pending, theme }) => (pending ? theme.white : theme.text1)};
@@ -99,6 +102,9 @@ const Web3StatusConnected = styled(Web3StatusGeneric)<{ pending?: boolean }>`
       border: 1px solid ${({ pending, theme }) => (pending ? darken(0.1, theme.primary1) : darken(0.1, theme.bg3))};
     }
   }
+  ${({ theme }) => theme.mediaWidth.upToSmall`
+  display: none;
+  `};
 `
 
 const Text = styled.p`
