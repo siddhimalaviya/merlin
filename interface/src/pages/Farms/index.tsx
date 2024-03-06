@@ -28,6 +28,7 @@ import { useActionModalToggle, useActiontModalOpen } from '../../state/actionBut
 import Input from '../../components/NumericalInput';
 import { Button } from '../../theme';
 import { ethers } from 'ethers';
+import ActionModal from '../../components/ActionButton';
 
 export default function Farms() {
   const [accordionOpen, setAccordionOpen] = useState<number | null>(0);
@@ -36,6 +37,7 @@ export default function Farms() {
   const [actionValue, setActionValue] = useState('');
   const [address, setAddress] = useState('');
   const [balance, setBalance] = useState('');
+  const [inputValue, setInputValue] = useState('');
 
   const Container = styled.div`
     width:180vh;
@@ -87,7 +89,7 @@ export default function Farms() {
     th {
       padding-left:10px;
       font-size: 12px;
-      font-weight:300;
+      font-weight:500;
       color: ${({ theme }) => theme.primary1}
     },
     td {
@@ -99,14 +101,14 @@ export default function Farms() {
   `;
 
   const Card = styled.div`
-    background-color: #fff;
+    background-color: ${({ theme }) => (theme.bg1)};
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border-radius: 3rem;
     margin-bottom: 1rem;
   `;
 
   const StyledPercentageBadge = styled.div`
-    border: 1px solid #a020f0;
+    border: 1px solid #aaaaaa;
     border-radius: 10px;
     padding: 2px;
   `;
@@ -134,7 +136,7 @@ export default function Farms() {
     padding: 10px;
     border-radius:10px;
     opacity: ${({ open }) => (open ? '1' : '0')};
-    animation: ${({ open }) => (open ? fadeIn : fadeOut)} 0.5s ease;
+    // {animation: ${({ open }) => (open ? fadeIn : fadeOut)} 0.5s ease}
     &:last-child {
       border-bottom-left-radius: 10px;
       border-bottom-right-radius: 10px;
@@ -449,7 +451,6 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
   margin: 20px 0px;
   width: 100%;
   font-size: 17px;
-  font-weight : bold;
   border: 1px solid gray;
   :hover,
   :focus {
@@ -522,11 +523,11 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
 `;
 
   // Button styled component
-  const Button = styled.button`
-  background: #e5e7e7;
+  const Button = styled.div`
+  background: ${({ theme }) => (theme.bg3)};
   border: 0;
   border-radius: 7px;
-  color:${({theme})=>(theme.text1)};
+  color:${({ theme }) => (theme.text1)};
   display: flex;
   padding: 5px 10px;
 `;
@@ -566,6 +567,18 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
    ${({ theme }) => theme.mediaWidth.upToSmall`
     width: 100%;
   `}
+`;
+
+  const MaxButton = styled.div`
+background: ${({ theme }) => (theme.primary1)};
+  border: 0;
+  border-radius: 7px;
+  color:${({ theme }) => (theme.bg1)};
+  position:absolute;
+  top:30px;
+  right:10px;
+  padding: 5px 10px;
+  cursor:pointer;
 `;
 
 
@@ -684,6 +697,20 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
 
   const walletModalOpen = useWalletModalOpen()
 
+  const handleMaxClick = () => {
+    setInputValue(balance);
+
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    // Set focus to Max button after input change
+  };
+
+  const handleCloseDialog = () =>{
+    setInputValue('')
+    toggleActionModal()
+  }
 
   function getModalContent() {
     return (
@@ -695,18 +722,21 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
 
         {actionValue === 'Harvest' ?
           <ContentWrapper>
-            <RewardRow>Available Reward :</RewardRow>
+            <RewardRow>Availabel Reward :</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <ActionButton>{actionValue}</ActionButton>
             </div>
           </ContentWrapper>
           :
           <ContentWrapper>
-            <div style={{ display: 'flex', justifyContent:'flex-end' }}>
-              <Button>Available Balance : {Number(balance).toFixed(5)}</Button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button>Availabel : {Number(balance).toFixed(5)}</Button>
             </div>
             {/* <Input placeholder="Enter something..." /> */}
-            <StyledInput placeholder={`Enter ${actionValue} Amount`} />
+            <FormWrapper>
+              <MaxButton onClick={handleMaxClick}>Max</MaxButton>
+              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={inputValue} onChange={handleChange} />
+            </FormWrapper>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <ActionButton>{actionValue}</ActionButton>
             </div>
@@ -929,9 +959,9 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
         </Card>
       }
 
-      <Modal isOpen={actionModalOpen} onDismiss={toggleActionModal} minHeight={false} maxHeight={90}>
+      <ActionModal isOpen={actionModalOpen} onDismiss={handleCloseDialog} minHeight={false} maxHeight={90}>
         <Wrapper>{getModalContent()}</Wrapper>
-      </Modal>
+      </ActionModal>
 
 
     </Container >
