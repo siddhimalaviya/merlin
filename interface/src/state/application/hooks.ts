@@ -23,7 +23,6 @@ export function useSettingsMenuOpen(): boolean {
   return useSelector((state: AppState) => state.application.settingsMenuOpen)
 }
 
-
 export function useToggleSettingsMenu(): () => void {
   const dispatch = useDispatch()
   return useCallback(() => dispatch(toggleSettingsMenu()), [dispatch])

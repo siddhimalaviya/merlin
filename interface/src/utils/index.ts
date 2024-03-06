@@ -23,12 +23,16 @@ const ETHERSCAN_PREFIXES: { [chainId in ChainId]: string } = {
   4: 'rinkeby.',
   5: 'goerli.',
   42: 'kovan.',
-  11155111: 'sepolia'
+  11155111: 'sepolia',
+  686868: 'merlin.'
 }
 
 export function getEtherscanLink(chainId: ChainId, data: string, type: 'transaction' | 'token' | 'address'): string {
-  const prefix = `https://${ETHERSCAN_PREFIXES[chainId] || ETHERSCAN_PREFIXES[1]}etherscan.io`
-
+  let prefix
+  if (chainId !== 686868)
+    prefix = `https://${ETHERSCAN_PREFIXES[chainId] || ETHERSCAN_PREFIXES[1]}etherscan.io`
+  else
+    prefix = `https://testnet-scan.merlinchain.io`
   switch (type) {
     case 'transaction': {
       return `${prefix}/tx/${data}`

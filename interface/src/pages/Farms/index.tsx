@@ -27,24 +27,20 @@ import Modal from '../../components/Modal';
 import { useActionModalToggle, useActiontModalOpen } from '../../state/actionButton/hooks';
 import Input from '../../components/NumericalInput';
 import { Button } from '../../theme';
-import { ethers } from 'ethers';
 import ActionModal from '../../components/ActionButton';
+import { ethers } from 'ethers';
 
 export default function Farms() {
   const [accordionOpen, setAccordionOpen] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [actionValue, setActionValue] = useState('');
-  const [address, setAddress] = useState('');
-  const [balance, setBalance] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [balance, setBalance] = useState('');
 
   const Container = styled.div`
     width:180vh;
     margin:auto;
-    @media (max-width: 1440px) {
-      width: 160vh; /* Adjust padding for smaller screens */
-    }
     @media (max-width: 1024px) {
       width: 150vh; /* Adjust padding for smaller screens */
     }
@@ -101,7 +97,7 @@ export default function Farms() {
   `;
 
   const Card = styled.div`
-    background-color: ${({ theme }) => (theme.bg1)};
+    background-color :${({theme})=>(theme.bg1)}
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border-radius: 3rem;
     margin-bottom: 1rem;
@@ -163,7 +159,7 @@ export default function Farms() {
 
   const StyledRightColumn = styled.div`
     width: 100%;
-    border: 2px solid ${({ theme }) => (theme.text3)};
+    border: 1px solid #aaaaaa;
     border-radius: 10px;
     padding: 10px 15px;
   `;
@@ -418,20 +414,9 @@ ${({ faded }) =>
   `};
 `
 
-  const RewardRow = styled.div`
-${({ theme }) => theme.flexRowNoWrap};
-padding: 1rem 1rem;
-font-weight: 500;
-font-size:18px;
-color: ${props => (props.color === 'blue' ? ({ theme }) => theme.primary1 : 'inherit')};
-${({ theme }) => theme.mediaWidth.upToMedium`
-  padding: 1rem;
-`};
-`
-
   const ContentWrapper = styled.div`
   background-color: ${({ theme }) => theme.bg2};
-  padding: 1rem;
+  padding: 2rem;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
 
@@ -581,6 +566,9 @@ background: ${({ theme }) => (theme.primary1)};
   cursor:pointer;
 `;
 
+const RewardRow = styled.div`
+`
+
 
 
   function Web3StatusInner() {
@@ -617,15 +605,15 @@ background: ${({ theme }) => (theme.primary1)};
         //   )}
         //   {/* {!hasPendingTransactions && connector && <StatusIcon connector={connector} />} */}
         // </Web3StatusConnected>
-        <ActionButtonContainer>
-          <ButtonContainer>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+          <div style={{ display: 'flex' , width:'40%'}}>
             <ActionButton onClick={() => handleModal('Stack')}>Stack</ActionButton>
             <ActionButton onClick={() => handleModal('Unstack')}>Unstack</ActionButton>
-          </ButtonContainer>
-          <SingleButtonContainer>
-            <ActionButton onClick={() => handleModal('Harvest')}>Harvest</ActionButton>
-          </SingleButtonContainer>
-        </ActionButtonContainer>
+          </div>
+          <div style={{ display: 'flex' , width:'20%'}}>
+          <ActionButton onClick={() => handleModal('Harvest')}>Harvest</ActionButton>
+          </div>
+        </div>
       )
     } else if (error) {
       return (
@@ -654,8 +642,8 @@ background: ${({ theme }) => (theme.primary1)};
   };
 
 
+  const address = '0xc8cD058Cb7B46fe9e2d12cF23Add61434Bad9d30';
   useEffect(() => {
-    const address = '0xc8cD058Cb7B46fe9e2d12cF23Add61434Bad9d30';
     const getBalance = async () => {
       try {
         // Initialize ethers provider using MetaMask

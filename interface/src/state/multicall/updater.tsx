@@ -17,7 +17,7 @@ import {
 } from './actions'
 
 // chunk calls so we do not exceed the gas limit
-const CALL_CHUNK_SIZE = 500
+const CALL_CHUNK_SIZE = 5000
 
 /**
  * Fetches a chunk of calls, enforcing a minimum block number constraint
@@ -34,6 +34,7 @@ async function fetchChunk(
   let resultsBlockNumber, returnData
   try {
     ;[resultsBlockNumber, returnData] = await multicallContract.aggregate(chunk.map(obj => [obj.address, obj.callData]))
+    
   } catch (error) {
     console.debug('Failed to fetch chunk inside retry', error)
     throw error
@@ -139,7 +140,10 @@ export default function Updater(): null {
     if (outdatedCallKeys.length === 0) return
     const calls = outdatedCallKeys.map(key => parseCallKey(key))
     
+<<<<<<< HEAD
     console.log("treigger");
+=======
+>>>>>>> dev-test-new
     const chunkedCalls = chunkArray(calls, CALL_CHUNK_SIZE)
 
     if (cancellations.current?.blockNumber !== latestBlockNumber) {

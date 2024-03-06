@@ -139,7 +139,6 @@ export default createReducer(initialState, builder =>
           new Set()
         )
         const newListOfListsSet = DEFAULT_LIST_OF_LISTS.reduce<Set<string>>((s, l) => s.add(l), new Set())
-        console.log("nl:", newListOfListsSet);
 
         DEFAULT_LIST_OF_LISTS.forEach(listUrl => {
           if (!lastInitializedSet.has(listUrl)) {

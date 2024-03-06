@@ -104,7 +104,6 @@ export default createReducer(initialState, builder =>
       state.tokens[serializedToken.chainId] = state.tokens[serializedToken.chainId] || {}
       state.tokens[serializedToken.chainId][serializedToken.address] = serializedToken
       state.timestamp = currentTimestamp()
-      console.log("imp3", state.tokens[1]);
 
     })
     .addCase(removeSerializedToken, (state, { payload: { address, chainId } }) => {

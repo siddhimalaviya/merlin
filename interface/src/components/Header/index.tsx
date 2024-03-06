@@ -85,7 +85,6 @@ const AccountElement = styled.div<{ active: boolean }>`
   }
 `
 
-
 const TestnetWrapper = styled.div`
   white-space: nowrap;
   width: fit-content;
@@ -154,7 +153,8 @@ const NETWORK_LABELS: { [chainId in ChainId]: string | null } = {
   [ChainId.ROPSTEN]: 'Ropsten',
   [ChainId.GÖRLI]: 'Görli',
   [ChainId.KOVAN]: 'Kovan',
-  [ChainId.SEPOLIA]: 'Sepolia'
+  [ChainId.SEPOLIA]: 'Sepolia',
+  [ChainId.MERLIN]:'Merlin'
 }
 
 export default function Header() {
