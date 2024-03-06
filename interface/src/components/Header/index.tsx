@@ -141,7 +141,7 @@ const StyledLink = styled(Link)<StyledLinkProps>`
 `;
 
 const LinkText = styled.div<StyledLinkProps>`
-  color: ${({ theme, isActive }) => (!isActive ? theme.black : theme.primary1)};
+  color: ${({ theme, isActive }) => (!isActive ? theme.text1 : theme.primary1)};
   font-weight:600;
   text-decoration: none;
   
