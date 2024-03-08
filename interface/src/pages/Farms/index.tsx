@@ -1,43 +1,205 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'react-feather';
 import { useState } from 'react';
-import AppBody from '../AppBody'
-import { Link } from 'react-router-dom';
-import { useWalletModalOpen, useWalletModalToggle } from '../../state/application/hooks';
+import { useWalletModalToggle } from '../../state/application/hooks';
 import { ButtonSecondary } from '../../components/Button'
 import { darken, lighten } from 'polished';
 import { useTranslation } from 'react-i18next';
-import useENSName from '../../hooks/useENSName';
-import { isTransactionRecent, useAllTransactions } from '../../state/transactions/hooks';
-import { useHasSocks } from '../../hooks/useSocksBalance';
 import { ReactComponent as Close } from '../../assets/images/x.svg'
-import { TransactionDetails } from '../../state/transactions/reducer';
-import { shortenAddress } from '../../utils';
-import { AbstractConnector } from '@web3-react/abstract-connector'
-import { fortmatic, injected, portis, walletconnect, walletlink } from '../../connectors';
-import Identicon from '../../components/Identicon';
-import WalletConnectIcon from '../../assets/images/walletConnectIcon.svg'
-import CoinbaseWalletIcon from '../../assets/images/coinbaseWalletIcon.svg'
-import FortmaticIcon from '../../assets/images/fortmaticIcon.png'
-import PortisIcon from '../../assets/images/portisIcon.png'
 import { Activity } from 'react-feather'
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core'
 import styled, { css, keyframes } from 'styled-components'
-import Modal from '../../components/Modal';
 import { useActionModalToggle, useActiontModalOpen } from '../../state/actionButton/hooks';
-import Input from '../../components/NumericalInput';
-import { Button } from '../../theme';
-import { ethers } from 'ethers';
 import ActionModal from '../../components/ActionButton';
+import {
+  stakecontractInstance ,
+  StakingContractAddress ,
+  LPTokenContractInstance ,
+  getStakingLiquidity ,
+  DECIMAL,
+  FIXED_PERCENTAGE,
+  stakeToken,
+  unStakeToken,
+  harvestToken
+  } from './stakeConstant.js'
+// import { useActiveWeb3React } from '../../hooks'
+import { useActiveWeb3React } from '../../hooks'
+import Loader from '../../components/Loader';
+
 
 export default function Farms() {
+
   const [accordionOpen, setAccordionOpen] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [actionValue, setActionValue] = useState('');
-  const [address, setAddress] = useState('');
-  const [balance, setBalance] = useState('');
+  const [balance, ] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const { account } = useActiveWeb3React()
+
+  //data of staking in contract 
+  const [isLoading , setIsLoading] = useState(false)
+  const [isLoading2 , setIsLoading2] = useState(false)
+
+  const [totalTokenSupply, setTotalTokenSupply ] = useState(0)
+  const [stakedAmountOfToken , setstakedAmountOfToken] = useState(0)
+  const [availableReward , setAvailableReward ] = useState(0)
+  const [totalLPToken ,setTotalLPToken ] = useState(0)
+  const [balanceOfStakingAmount , setBalanceOfStakingAmount] = useState(0)
+  const [totalStackLiquidityInUSD ,setTotalStackLiquidityInUSD] = useState(0)
+  const [apyPercentage ,setAPYPercentage] = useState(0)
+
+  useEffect(()=>{
+    setIsLoading2(true)
+    getTotalSupplyData()
+    getStakedAmount()
+    getAvailableReward()
+    getTotalLPToken()
+    getBalanceOfStakingAmount()
+    getTotalLiquidityValue()
+    setIsLoading2(false)
+    // handleStakeToken()
+    // handleUnStakeToken()
+    // handleHarvestToken()
+    
+  },[])
+
+  async function getTotalSupplyData(){
+    try{
+      setIsLoading(true)
+      const contract = await stakecontractInstance()
+      const data = await contract.totalSupply()
+      setTotalTokenSupply(Number(data))
+    }
+    catch(e){
+      console.log("Error getting data");
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+    
+  }
+
+  async function getStakedAmount(){
+    try{
+      setIsLoading(true)
+      const contract = await stakecontractInstance()
+      const data = await contract.balanceOf(account)
+      setstakedAmountOfToken(Number(data))
+    }
+    catch(e){
+      console.log("Error getting data");
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  async function getAvailableReward(){
+    try{
+      setIsLoading(true)
+      const contract = await stakecontractInstance()
+      const data = await contract.earned(account)
+      setAvailableReward(Number(data))
+    }
+    catch(e){
+      console.log("Error getting data");
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  async function getTotalLiquidityValue(){
+    try{
+      setIsLoading(true)
+      const data = await getStakingLiquidity()
+      setTotalStackLiquidityInUSD(Number(data?.totalLiquidityValue))
+      setAPYPercentage(Number(data?.APYPercentage))
+    }
+    catch(e){
+      console.log("Error getting Liquidity value : ",e);
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  async function getTotalLPToken(){
+    try{
+      setIsLoading(true)
+      const contract = await LPTokenContractInstance()
+      const data = await contract.balanceOf(StakingContractAddress)
+      setTotalLPToken(Number(data))
+    }
+    catch(e){
+      console.log("Error getting data");
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  async function getBalanceOfStakingAmount(){
+    try{
+      setIsLoading(true)
+      const contract = await LPTokenContractInstance()
+      const data = await contract.balanceOf(account)
+      setBalanceOfStakingAmount(Number(data))
+    }
+    catch(e){
+      console.log("Error getting data");
+      setIsLoading(false)
+    }
+    finally{
+      setIsLoading(false)
+    }
+  }
+
+  async function handleStakeToken(){
+    try{
+      await stakeToken(account , '0.0001')
+    }
+    catch(e)
+    {
+      console.log("Error staking token :" ,e);
+          }
+    finally{
+
+    }
+  }
+
+  async function handleUnStakeToken(){
+    try{
+      await unStakeToken(account , '0.00000000000000001')
+    }
+    catch(e)
+    {
+      console.log("Error unstaking token :" ,e);
+          }
+    finally{
+
+    }
+  }
+
+  async function handleHarvestToken(){
+    try{
+      await harvestToken(account)
+    }
+    catch(e)
+    {
+      console.log("Error withdrawing reward token :" ,e);
+    }
+    finally{
+
+    }
+  }
+  
 
   const Container = styled.div`
     width:180vh;
@@ -53,28 +215,11 @@ export default function Farms() {
     }
   `;
 
-  const AccordionHeader = styled.p`
-    font-size: 1rem;
-  `;
 
-  const StyledLabel = styled.label`
-    cursor: pointer;
-    position: relative;
-    inline-flex;
-    items-center;
-    justify-center;
-    padding: 0.25rem;
-    border-radius: 0.375rem;
-    background-color: #1a202c;
-  `;
 
-  const AccordionButton = styled.button`
-    background-color: #00b5eb;
-    color: #fff;
-    padding: 0.5rem 1rem;
-    margin-left: 0.5rem;
-  `;
+ 
 
+ 
   const AccordionContentWrapper = styled.div`
     display: flex;
     padding: 1.5rem;
@@ -134,13 +279,9 @@ export default function Farms() {
   const StyledBlackBorderDiv = styled.div<{ open: boolean }>`
   background-color :${({ theme }) => (theme.bg2)}
     padding: 10px;
-    border-radius:10px;
+    border-radius:3rem;
     opacity: ${({ open }) => (open ? '1' : '0')};
     // {animation: ${({ open }) => (open ? fadeIn : fadeOut)} 0.5s ease}
-    &:last-child {
-      border-bottom-left-radius: 10px;
-      border-bottom-right-radius: 10px;
-    }
   `;
 
   const StyledWidthDiv = styled.div`
@@ -154,18 +295,17 @@ export default function Farms() {
     width: 100%;
     display: flex;
     align-items: center;
+  
   `;
 
-  const StyledLeftColumn = styled.div`
-    width: 30%;
-    padding-left: 50px;
-  `;
+  
 
   const StyledRightColumn = styled.div`
     width: 100%;
     border: 2px solid ${({ theme }) => (theme.text3)};
     border-radius: 10px;
     padding: 10px 15px;
+    border-radius:3rem
   `;
 
   const StyledButtonContainer = styled.div`
@@ -180,15 +320,7 @@ export default function Farms() {
     color:${({ theme }) => (theme.text2)}
   `;
 
-  const StyledButton = styled.button`
-    text-align: center;
-    margin-top: 15px;
-    border-radius: 10px;
-    font-size:18px;
-    cursor:pointer;
-    background: ${({ theme }) => theme.primary1};
-    color: ${({ theme }) => theme.bg1}
-  `;
+ 
 
   const StyledMobileWidthDiv = styled.div`
   font-weight: bold;
@@ -213,11 +345,8 @@ export default function Farms() {
   margin-bottom: 0.5rem;
 `;
 
-  const StyledMobileQuestionMark = styled.span`
-  border: 1px solid black;
-  border-radius: 50%;
-  padding: 0.25rem;
-`;
+
+
 
   const MobileCard = styled.div`
   background-color: transparent;
@@ -269,20 +398,7 @@ export default function Farms() {
   font-weight: 500;
 `
 
-  const Web3StatusConnected = styled(Web3StatusGeneric) <{ pending?: boolean }>`
-  background-color: ${({ pending, theme }) => (pending ? theme.primary1 : theme.bg2)};
-  border: 1px solid ${({ pending, theme }) => (pending ? theme.primary1 : theme.bg3)};
-  color: ${({ pending, theme }) => (pending ? theme.white : theme.text1)};
-  font-weight: 500;
-  :hover,
-  :focus {
-    background-color: ${({ pending, theme }) => (pending ? darken(0.05, theme.primary1) : lighten(0.05, theme.bg2))};
-
-    :focus {
-      border: 1px solid ${({ pending, theme }) => (pending ? darken(0.1, theme.primary1) : darken(0.1, theme.bg3))};
-    }
-  }
-`
+ 
 
   const Web3StatusError = styled(Web3StatusGeneric)`
   background-color: ${({ theme }) => theme.red1};
@@ -295,15 +411,7 @@ export default function Farms() {
   }
 `
 
-  const IconWrapper = styled.div<{ size?: number }>`
-  ${({ theme }) => theme.flexColumnNoWrap};
-  align-items: center;
-  justify-content: center;
-  & > * {
-    height: ${({ size }) => (size ? size + 'px' : '32px')};
-    width: ${({ size }) => (size ? size + 'px' : '32px')};
-  }
-`
+
 
   const NetworkIcon = styled(Activity)`
   margin-left: 0.25rem;
@@ -449,55 +557,19 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
   border-radius: 10px;
   padding: 12px;
   margin: 20px 0px;
+  background-color: ${({ theme }) =>  theme.bg1};
+  color: ${({ theme }) =>  theme.text1};
   width: 100%;
   font-size: 17px;
   border: 1px solid gray;
-  :hover,
   :focus {
-    background-color: ${({ theme }) => (lighten(0.05, theme.bg2))};
+    border: none;
   }
 `;
 
-  function newTransactionsFirst(a: TransactionDetails, b: TransactionDetails) {
-    return b.addedTime - a.addedTime
-  }
 
-  const SOCK = (
-    <span role="img" aria-label="has socks emoji" style={{ marginTop: -4, marginBottom: -4 }}>
-      🧦
-    </span>
-  )
+ 
 
-  function StatusIcon({ connector }: { connector: AbstractConnector }) {
-    if (connector === injected) {
-      return <Identicon />
-    } else if (connector === walletconnect) {
-      return (
-        <IconWrapper size={16}>
-          <img src={WalletConnectIcon} alt={''} />
-        </IconWrapper>
-      )
-    } else if (connector === walletlink) {
-      return (
-        <IconWrapper size={16}>
-          <img src={CoinbaseWalletIcon} alt={''} />
-        </IconWrapper>
-      )
-    } else if (connector === fortmatic) {
-      return (
-        <IconWrapper size={16}>
-          <img src={FortmaticIcon} alt={''} />
-        </IconWrapper>
-      )
-    } else if (connector === portis) {
-      return (
-        <IconWrapper size={16}>
-          <img src={PortisIcon} alt={''} />
-        </IconWrapper>
-      )
-    }
-    return null
-  }
   const actionModalOpen = useActiontModalOpen()
   const toggleActionModal = useActionModalToggle()
 
@@ -506,21 +578,6 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
     setActionValue(action)
   }
 
-  const Input = styled.input`
-  border: 0;
-  border-radius: 10px;
-  color: white;
-  padding: 20px;
-  width: 100%;
-
-  &:focus {
-    outline: none;
-  }
-
-  &::placeholder {
-    color: white;
-  }
-`;
 
   // Button styled component
   const Button = styled.div`
@@ -575,48 +632,25 @@ background: ${({ theme }) => (theme.primary1)};
   border-radius: 7px;
   color:${({ theme }) => (theme.bg1)};
   position:absolute;
-  top:30px;
-  right:10px;
+  top:28px;
+  right:8px;
   padding: 5px 10px;
   cursor:pointer;
+  :focus {
+    background-color: ${({ theme }) => (lighten(0.05, theme.bg1))};
+  }
 `;
 
 
 
   function Web3StatusInner() {
     const { t } = useTranslation()
-    const { account, connector, error } = useWeb3React()
+    const { account,  error } = useWeb3React()
 
-    const { ENSName } = useENSName(account ?? undefined)
-
-    const allTransactions = useAllTransactions()
-
-    const sortedRecentTransactions = useMemo(() => {
-      const txs = Object.values(allTransactions)
-      return txs.filter(isTransactionRecent).sort(newTransactionsFirst)
-    }, [allTransactions])
-
-    const pending = sortedRecentTransactions.filter(tx => !tx.receipt).map(tx => tx.hash)
-
-    const hasPendingTransactions = !!pending.length
-    const hasSocks = useHasSocks()
     const toggleWalletModal = useWalletModalToggle()
 
     if (account) {
       return (
-        // <Web3StatusConnected id="web3-status-connected" onClick={toggleWalletModal} pending={hasPendingTransactions}>
-        //   {hasPendingTransactions ? (
-        //     <RowBetween>
-        //       <Text>{pending?.length} Pending</Text> <Loader stroke="white" />
-        //     </RowBetween>
-        //   ) : (
-        //     <>
-        //       {hasSocks ? SOCK : null}
-
-        //     </>
-        //   )}
-        //   {/* {!hasPendingTransactions && connector && <StatusIcon connector={connector} />} */}
-        // </Web3StatusConnected>
         <ActionButtonContainer>
           <ButtonContainer>
             <ActionButton onClick={() => handleModal('Stack')}>Stack</ActionButton>
@@ -653,29 +687,7 @@ background: ${({ theme }) => (theme.primary1)};
     setWindowWidth(window.innerWidth);
   };
 
-
-  useEffect(() => {
-    const address = '0xc8cD058Cb7B46fe9e2d12cF23Add61434Bad9d30';
-    const getBalance = async () => {
-      try {
-        // Initialize ethers provider using MetaMask
-        const provider = new ethers.providers.Web3Provider((window as any).ethereum);
-        // Fetch balance
-        const balanceWei = await provider.getBalance(address);
-        // Convert balance from Wei to Ether
-        const formattedBalance = ethers.utils.formatEther(balanceWei);
-        console.log(formattedBalance);
-
-        setBalance(formattedBalance);
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-        setBalance("0");
-      }
-    };
-
-    getBalance();
-  }, [address]);
-
+ 
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
@@ -693,12 +705,12 @@ background: ${({ theme }) => (theme.primary1)};
 
   }, [windowWidth])
 
-  console.log('Current window width:', windowWidth);
 
-  const walletModalOpen = useWalletModalOpen()
 
-  const handleMaxClick = () => {
-    setInputValue(balance);
+  const handleMaxClick = (actionValue :any) => {
+    if(actionValue === 'Stack')
+      setInputValue((balanceOfStakingAmount/DECIMAL).toString());
+
 
   }
 
@@ -722,7 +734,7 @@ background: ${({ theme }) => (theme.primary1)};
 
         {actionValue === 'Harvest' ?
           <ContentWrapper>
-            <RewardRow>Availabel Reward :</RewardRow>
+            <RewardRow>Available Reward :{availableReward/DECIMAL}</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <ActionButton>{actionValue}</ActionButton>
             </div>
@@ -730,11 +742,11 @@ background: ${({ theme }) => (theme.primary1)};
           :
           <ContentWrapper>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button>Availabel : {Number(balance).toFixed(5)}</Button>
+              <Button>Available : {actionValue=== 'Stack' ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE) :(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</Button>
             </div>
             {/* <Input placeholder="Enter something..." /> */}
             <FormWrapper>
-              <MaxButton onClick={handleMaxClick}>Max</MaxButton>
+              <MaxButton onClick={()=>{handleMaxClick(actionValue)}}>Max</MaxButton>
               <StyledInput placeholder={`Enter ${actionValue} Amount`} value={inputValue} onChange={handleChange} />
             </FormWrapper>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -747,22 +759,17 @@ background: ${({ theme }) => (theme.primary1)};
 
   return (
     <Container>
-      {/* <AccordionHeader>FILTER BY</AccordionHeader>
-        <StyledLabel className="themeSwitcherTwo  inline-flex  select-none  rounded-xl p-1">
-          <input type="checkbox" className="sr-only" checked={false} />
-          <AccordionButton>Active</AccordionButton>
-          <AccordionButton>Inactive</AccordionButton>
-        </StyledLabel> */}
-
+    {isLoading2 ? <Loader />:<>
+    
       {isMobile ?
         <MobileMainCard>
           <div onClick={() => toggleAccordion(0)}>
             <MobileCard>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-                <StyledMobileWidthDiv>CAKE-BNB LP</StyledMobileWidthDiv>
+                <StyledMobileWidthDiv>UNISWAP V2 LP</StyledMobileWidthDiv>
 
-                <StyledMobilePercentageBadge>0.25%</StyledMobilePercentageBadge>
+                <StyledMobilePercentageBadge>0.3%</StyledMobilePercentageBadge>
                 <div  >
                   {accordionOpen !== 0 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
                 </div>
@@ -770,12 +777,11 @@ background: ${({ theme }) => (theme.primary1)};
               {accordionOpen === 0 && (
                 <StyledBlackBorderDiv open={accordionOpen === 0}>
                   <div style={{ marginBottom: '10px' }}>
-                    <div>TVL : 0</div>
-                    <div>APY : Up to 30.7%</div>
-                    <div>Stack Liquidity : $304,961</div>
-                    <div>Availabel LP Token : 0.9x</div>
-                    <div>Reward Available : OLP</div>
-                    <div>Staked Amount : OLP</div>
+                    <div>APY : Up to {apyPercentage.toFixed(FIXED_PERCENTAGE)} %</div>
+                    <div>Stack Liquidity : ${totalStackLiquidityInUSD/DECIMAL}</div>
+                    <div>Availabel LP Token : {(balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
+                    <div>Reward Available : {(availableReward /DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
+                    <div>Staked Amount : {(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
                   </div>
                   <StyledContainer>
                     <StyledRightColumn>
@@ -790,49 +796,17 @@ background: ${({ theme }) => (theme.primary1)};
               }
             </MobileCard>
           </div>
-          <hr />
-          <div onClick={() => toggleAccordion(1)}>
-            <MobileCard>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-
-                <StyledMobileWidthDiv>CAKE-BNB LP</StyledMobileWidthDiv>
-
-                <StyledMobilePercentageBadge>0.25%</StyledMobilePercentageBadge>
-                <div  >
-                  {accordionOpen !== 1 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
-                </div>
-              </div>
-              {accordionOpen === 1 && (
-                <StyledBlackBorderDiv open={accordionOpen === 1}>
-                  <DataContainer>
-                    <DataItem>
-                      <div>Earned: StakeIndex</div>
-                      <div>APR: Long-Term</div>
-                      <div>Stake Liquidity: StakeIndex</div>
-                      <div>Multiplier: Long-Term</div>
-                      {/* <div><StyledMobileQuestionMark>?</StyledMobileQuestionMark></div> */}
-                    </DataItem>
-                    <DataItem>
-                      <div>Available: 10</div>
-                      <div>StakedReward: 500</div>
-                    </DataItem>
-                  </DataContainer>
-                </StyledBlackBorderDiv>
-              )
-              }
-            </MobileCard>
-          </div>
+          
         </MobileMainCard> :
         <Card>
           <AccordionContentWrapper onClick={() => toggleAccordion(0)}>
-            <StyledWidthDiv>CAKE-BNB LP</StyledWidthDiv>
+            <StyledWidthDiv>UNISWAP V2 LP</StyledWidthDiv>
             <StyledPercentageBadge >
-              0.25%
+              0.3%
             </StyledPercentageBadge>
             <StyledTable>
               <thead>
                 <tr>
-                  <th>TVL</th>
                   <th>APY</th>
                   <th>Stack Liquidity</th>
                   <th>Availabel LP Token</th>
@@ -842,12 +816,11 @@ background: ${({ theme }) => (theme.primary1)};
               </thead>
               <tbody>
                 <tr>
-                  <td>0</td>
-                  <td>Up to 30.7%</td>
-                  <td>$304,961</td>
-                  <td>0.9x</td>
-                  <td>OLP</td>
-                  <td>OLP</td>
+                  <td>Up to {apyPercentage.toFixed(FIXED_PERCENTAGE)} %</td>
+                  <td>${totalStackLiquidityInUSD /DECIMAL}</td>
+                  <td>{(balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
+                  <td>{(availableReward/DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
+                  <td>{(stakedAmountOfToken/ DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
                 </tr>
               </tbody>
             </StyledTable>
@@ -867,98 +840,12 @@ background: ${({ theme }) => (theme.primary1)};
               </StyledContainer>
             </StyledBlackBorderDiv>
           )}
-          <hr />
-          <AccordionContentWrapper onClick={() => toggleAccordion(1)}>
-            <StyledWidthDiv>CAKE-BNB LP</StyledWidthDiv>
-            <StyledPercentageBadge >
-              0.25%
-            </StyledPercentageBadge>
-            <StyledTable>
-              <thead>
-                <tr>
-                  <th>TVL</th>
-                  <th>APY</th>
-                  <th>Stack Liquidity</th>
-                  <th>Availabel LP Token</th>
-                  <th>Reward Available</th>
-                  <th>Staked Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>0</td>
-                  <td>Up to 30.7%</td>
-                  <td>$304,961</td>
-                  <td>0.9x</td>
-                  <td>OLP</td>
-                  <td>OLP</td>
-                </tr>
-              </tbody>
-            </StyledTable>
-            <div  >
-              {accordionOpen !== 1 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
-            </div>
-          </AccordionContentWrapper>
-          {accordionOpen === 1 && (
-            <StyledBlackBorderDiv open={accordionOpen === 1}>
-              <StyledContainer>
-                <StyledRightColumn>
-                  <StyledButtonContainer>
-                    <StyledParagraph>START FARMING</StyledParagraph>
-                    <Web3StatusInner />
-                  </StyledButtonContainer>
-                </StyledRightColumn>
-              </StyledContainer>
-            </StyledBlackBorderDiv>
-          )}
-          <hr />
-          <AccordionContentWrapper onClick={() => toggleAccordion(2)}>
-            <StyledWidthDiv>CAKE-BNB LP</StyledWidthDiv>
-            <StyledPercentageBadge >
-              0.25%
-            </StyledPercentageBadge>
-            <StyledTable>
-              <thead>
-                <tr>
-                  <th>TVL</th>
-                  <th>APY</th>
-                  <th>Stack Liquidity</th>
-                  <th>Availabel LP Token</th>
-                  <th>Reward Available</th>
-                  <th>Staked Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>0</td>
-                  <td>Up to 30.7%</td>
-                  <td>$304,961</td>
-                  <td>0.9x</td>
-                  <td>OLP</td>
-                  <td>OLP</td>
-                </tr>
-              </tbody>
-            </StyledTable>
-            <div  >
-              {accordionOpen !== 2 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
-            </div>
-          </AccordionContentWrapper>
-          {accordionOpen === 2 && (
-            <StyledBlackBorderDiv open={accordionOpen === 2}>
-              <StyledContainer>
-                <StyledRightColumn>
-                  <StyledButtonContainer>
-                    <StyledParagraph>START FARMING</StyledParagraph>
-                    <Web3StatusInner />
-                  </StyledButtonContainer>
-                </StyledRightColumn>
-              </StyledContainer>
-            </StyledBlackBorderDiv>
-          )}
-          {/* { <hr />} */}
+
+
         </Card>
       }
-
+    </>
+    }
       <ActionModal isOpen={actionModalOpen} onDismiss={handleCloseDialog} minHeight={false} maxHeight={90}>
         <Wrapper>{getModalContent()}</Wrapper>
       </ActionModal>

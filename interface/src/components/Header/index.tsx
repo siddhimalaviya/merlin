@@ -19,9 +19,9 @@ import Menu from '../Menu'
 
 import Row, { RowBetween } from '../Row'
 import Web3Status from '../Web3Status'
-import VersionSwitch from './VersionSwitch'
+// import VersionSwitch from './VersionSwitch'
 import { Link, useLocation } from 'react-router-dom'
-import { Button } from '../../theme'
+// import { Button } from '../../theme'
 
 const HeaderFrame = styled.div`
   display: flex;
