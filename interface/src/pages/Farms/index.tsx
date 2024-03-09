@@ -18,14 +18,14 @@ import {
   getStakingLiquidity ,
   DECIMAL,
   FIXED_PERCENTAGE,
+  FIAT_FIXED_PERCENTAGE,
   stakeToken,
   unStakeToken,
-  harvestToken
-  } from './stakeConstant.js'
-// import { useActiveWeb3React } from '../../hooks'
+  harvestToken,
+  BRAND_NAME
+  } from './stakeConstant'
 import { useActiveWeb3React } from '../../hooks'
 import Loader from '../../components/Loader';
-
 
 export default function Farms() {
 
@@ -33,14 +33,18 @@ export default function Farms() {
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [actionValue, setActionValue] = useState('');
-  const [balance, ] = useState('');
-  const [inputValue, setInputValue] = useState('');
+  const [inputStakeValue, setStakeInputValue] = useState('');
+  const [inputUnStakeValue, setUnStakeInputValue] = useState('');
+
   const { account } = useActiveWeb3React()
 
-  //data of staking in contract 
+  //LOadewr state
+  const [refreshFlag ,setRefreshFlag] =useState(false)
   const [isLoading , setIsLoading] = useState(false)
-  const [isLoading2 , setIsLoading2] = useState(false)
-
+  const [isLoading2 , setIsLoading2] = useState(true)
+  const [isLoadingW ,setIsLoadingW ] = useState(false)
+  
+  //data of staking in contract 
   const [totalTokenSupply, setTotalTokenSupply ] = useState(0)
   const [stakedAmountOfToken , setstakedAmountOfToken] = useState(0)
   const [availableReward , setAvailableReward ] = useState(0)
@@ -50,19 +54,20 @@ export default function Farms() {
   const [apyPercentage ,setAPYPercentage] = useState(0)
 
   useEffect(()=>{
+    getAllData()
+  },[account ,refreshFlag])
+
+  console.log("test for isLoading : " , isLoading , isLoading);
+  async function getAllData(){
     setIsLoading2(true)
-    getTotalSupplyData()
-    getStakedAmount()
-    getAvailableReward()
-    getTotalLPToken()
-    getBalanceOfStakingAmount()
-    getTotalLiquidityValue()
+    await getTotalSupplyData()
+    await getStakedAmount()
+    await getAvailableReward()
+    await getTotalLPToken()
+    await getBalanceOfStakingAmount()
+    await getTotalLiquidityValue()
     setIsLoading2(false)
-    // handleStakeToken()
-    // handleUnStakeToken()
-    // handleHarvestToken()
-    
-  },[])
+  }
 
   async function getTotalSupplyData(){
     try{
@@ -161,45 +166,60 @@ export default function Farms() {
     }
   }
 
-  async function handleStakeToken(){
+  async function handleStakeToken(amount : any){
     try{
-      await stakeToken(account , '0.0001')
+      setIsLoadingW(true)
+      await stakeToken(account , amount)
     }
     catch(e)
     {
       console.log("Error staking token :" ,e);
-          }
+      setIsLoadingW(false)
+    }
     finally{
-
+      setRefreshFlag(!refreshFlag)
+      setIsLoadingW(false)
     }
   }
 
-  async function handleUnStakeToken(){
+  async function handleUnStakeToken(amount : any ){
     try{
-      await unStakeToken(account , '0.00000000000000001')
+      setIsLoadingW(true)
+      await unStakeToken(account , amount)
     }
     catch(e)
     {
       console.log("Error unstaking token :" ,e);
-          }
+      setIsLoadingW(false)
+    }
     finally{
-
+      setRefreshFlag(!refreshFlag)
+      setIsLoadingW(false)
     }
   }
 
   async function handleHarvestToken(){
     try{
+      setIsLoadingW(true)
       await harvestToken(account)
     }
     catch(e)
     {
       console.log("Error withdrawing reward token :" ,e);
+      setIsLoadingW(false)
     }
     finally{
+      setRefreshFlag(!refreshFlag)
+      setIsLoadingW(false)
 
     }
   }
   
+  async function handleTogleClose(){
+    setStakeInputValue('')
+    setUnStakeInputValue('')
+    toggleActionModal()
+  }
 
   const Container = styled.div`
     width:180vh;
@@ -290,6 +310,12 @@ export default function Farms() {
     font-weight:bold;
     color : ${({ theme }) => theme.primary1}
   `;
+  const StyledFetchFont = styled.div`
+    padding-left: 10px;
+    font-weight:bold;
+    font-size:20px;
+    color : ${({ theme }) => theme.primary1}
+  `;
 
   const StyledContainer = styled.div`
     width: 100%;
@@ -335,16 +361,8 @@ export default function Farms() {
   margin-bottom: 0.5rem;
 `;
 
-  const DataContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-`;
 
-  const DataItem = styled.div`
-  flex: 0 0 50%; /* Two items per row, adjust as needed */
-  margin-bottom: 0.5rem;
-`;
-
+ 
 
 
 
@@ -709,25 +727,29 @@ background: ${({ theme }) => (theme.primary1)};
 
   const handleMaxClick = (actionValue :any) => {
     if(actionValue === 'Stack')
-      setInputValue((balanceOfStakingAmount/DECIMAL).toString());
-
+      setStakeInputValue((balanceOfStakingAmount/DECIMAL).toString());
+    else  
+      setUnStakeInputValue((stakedAmountOfToken/DECIMAL).toString())
 
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    // Set focus to Max button after input change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>,actionvalue : any) => {
+    if(actionvalue === 'Stack')
+      setStakeInputValue(e.target.value);
+    else
+      setUnStakeInputValue(e.target.value)
+      // Set focus to Max button after input change
   };
 
   const handleCloseDialog = () =>{
-    setInputValue('')
+    setStakeInputValue('')
     toggleActionModal()
   }
 
   function getModalContent() {
     return (
       <UpperSection>
-        <CloseIcon onClick={toggleActionModal}>
+        <CloseIcon onClick={handleTogleClose}>
           <CloseColor />
         </CloseIcon>
         <HeaderRow>{actionValue}</HeaderRow>
@@ -736,7 +758,7 @@ background: ${({ theme }) => (theme.primary1)};
           <ContentWrapper>
             <RewardRow>Available Reward :{availableReward/DECIMAL}</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton>{actionValue}</ActionButton>
+              <ActionButton disabled={isLoadingW} onClick={()=>handleHarvestToken()}>{isLoadingW?<Loader stroke={'#000000'}/> : actionValue}</ActionButton>
             </div>
           </ContentWrapper>
           :
@@ -747,10 +769,10 @@ background: ${({ theme }) => (theme.primary1)};
             {/* <Input placeholder="Enter something..." /> */}
             <FormWrapper>
               <MaxButton onClick={()=>{handleMaxClick(actionValue)}}>Max</MaxButton>
-              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={inputValue} onChange={handleChange} />
+              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={actionValue ==='Stack'? inputStakeValue : inputUnStakeValue} onChange={(e)=>{handleChange(e,actionValue)}} />
             </FormWrapper>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton>{actionValue}</ActionButton>
+              <ActionButton disabled={isLoadingW} onClick={()=> {actionValue ==='Stack' ? handleStakeToken(inputStakeValue) : handleUnStakeToken(inputUnStakeValue)} }>{isLoadingW?<Loader stroke={'#000000'}/> : actionValue}</ActionButton>
             </div>
           </ContentWrapper>}
       </UpperSection>
@@ -759,15 +781,23 @@ background: ${({ theme }) => (theme.primary1)};
 
   return (
     <Container>
-    {isLoading2 ? <Loader />:<>
     
       {isMobile ?
+        
         <MobileMainCard>
+          {isLoading2 ?  <>
+            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
+              <Loader size='80px'/>
+            </div>
+            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
+            <StyledFetchFont>Fetching Data...</StyledFetchFont>
+            </div>
+           </> : 
           <div onClick={() => toggleAccordion(0)}>
             <MobileCard>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-                <StyledMobileWidthDiv>UNISWAP V2 LP</StyledMobileWidthDiv>
+                <StyledMobileWidthDiv>{BRAND_NAME} V2 LP</StyledMobileWidthDiv>
 
                 <StyledMobilePercentageBadge>0.3%</StyledMobilePercentageBadge>
                 <div  >
@@ -776,12 +806,12 @@ background: ${({ theme }) => (theme.primary1)};
               </div>
               {accordionOpen === 0 && (
                 <StyledBlackBorderDiv open={accordionOpen === 0}>
-                  <div style={{ marginBottom: '10px' }}>
-                    <div>APY : Up to {apyPercentage.toFixed(FIXED_PERCENTAGE)} %</div>
-                    <div>Stack Liquidity : ${totalStackLiquidityInUSD/DECIMAL}</div>
-                    <div>Availabel LP Token : {(balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
-                    <div>Reward Available : {(availableReward /DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
-                    <div>Staked Amount : {(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</div>
+                  <div style={{ margin: '10px' }}>
+                    <div style={{ margin: '10px' }}>APY : Up to {account ? parseInt(apyPercentage.toString()) : ''} %</div>
+                    <div style={{ margin: '10px' }}>Staked Liquidity : ${account ? totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE) : ''}</div>
+                    <div style={{ margin: '10px' }}>Available LP : {account ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</div>
+                    <div style={{ margin: '10px' }}>Available Reward : {account ?(availableReward /DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</div>
+                    <div style={{ margin: '10px' }}>Staked LP : {account ?(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE):'00'}</div>
                   </div>
                   <StyledContainer>
                     <StyledRightColumn>
@@ -796,11 +826,26 @@ background: ${({ theme }) => (theme.primary1)};
               }
             </MobileCard>
           </div>
-          
+          }
         </MobileMainCard> :
-        <Card>
+       
+       
+       
+       <Card>
+          {isLoading2 
+           ?
+           <>
+            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
+              <Loader size='80px'/>
+            </div>
+            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
+            <StyledFetchFont>Fetching Data...</StyledFetchFont>
+            </div>
+           </>
+          :
+          <>
           <AccordionContentWrapper onClick={() => toggleAccordion(0)}>
-            <StyledWidthDiv>UNISWAP V2 LP</StyledWidthDiv>
+            <StyledWidthDiv>{BRAND_NAME} V2 LP</StyledWidthDiv>
             <StyledPercentageBadge >
               0.3%
             </StyledPercentageBadge>
@@ -808,19 +853,19 @@ background: ${({ theme }) => (theme.primary1)};
               <thead>
                 <tr>
                   <th>APY</th>
-                  <th>Stack Liquidity</th>
-                  <th>Availabel LP Token</th>
-                  <th>Reward Available</th>
-                  <th>Staked Amount</th>
+                  <th>Staked Liquidity</th>
+                  <th>Available LP</th>
+                  <th>Available Reward</th>
+                  <th>Staked LP</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Up to {apyPercentage.toFixed(FIXED_PERCENTAGE)} %</td>
-                  <td>${totalStackLiquidityInUSD /DECIMAL}</td>
-                  <td>{(balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
-                  <td>{(availableReward/DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
-                  <td>{(stakedAmountOfToken/ DECIMAL).toFixed(FIXED_PERCENTAGE)}</td>
+                  <td>Up to {account? parseInt(apyPercentage.toString()):''} %</td>
+                  <td>${account ?totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE): ''}</td>
+                  <td>{account ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</td>
+                  <td>{account ?(availableReward/DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</td>
+                  <td>{account ? (stakedAmountOfToken/ DECIMAL).toFixed(FIXED_PERCENTAGE):'00'}</td>
                 </tr>
               </tbody>
             </StyledTable>
@@ -840,12 +885,10 @@ background: ${({ theme }) => (theme.primary1)};
               </StyledContainer>
             </StyledBlackBorderDiv>
           )}
-
-
+          </>}
         </Card>
       }
-    </>
-    }
+    
       <ActionModal isOpen={actionModalOpen} onDismiss={handleCloseDialog} minHeight={false} maxHeight={90}>
         <Wrapper>{getModalContent()}</Wrapper>
       </ActionModal>
