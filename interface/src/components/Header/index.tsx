@@ -6,6 +6,7 @@ import { Text } from 'rebass'
 import styled from 'styled-components'
 
 import Logo from '../../assets/svg/logo.svg'
+// eslint-disable-next-line
 import LogoDark from '../../assets/svg/logo_white.svg'
 import Wordmark from '../../assets/svg/wordmark.svg'
 import WordmarkDark from '../../assets/svg/wordmark_white.svg'

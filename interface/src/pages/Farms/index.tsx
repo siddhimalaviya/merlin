@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'react-feather';
 import { useState } from 'react';
@@ -26,6 +27,7 @@ import {
   } from './stakeConstant'
 import { useActiveWeb3React } from '../../hooks'
 import Loader from '../../components/Loader';
+import { ethers } from "ethers";
 
 export default function Farms() {
 
@@ -37,6 +39,14 @@ export default function Farms() {
   const [inputUnStakeValue, setUnStakeInputValue] = useState('');
 
   const { account } = useActiveWeb3React()
+
+  //error states
+  const [stakeError ,setStakeError] = useState('')
+  const [unStakeError , setUnStakeError] =useState('')
+  const [harvestError , setHarvestError] = useState('')
+  const [harvestDisable , setHarvestDisable] = useState(true)       
+  const [actionButtonEnable , setActionButtonEnable ] = useState(false)
+  const [actionError , setActionError ] = useState('')
 
   //LOadewr state
   const [refreshFlag ,setRefreshFlag] =useState(false)
@@ -57,7 +67,6 @@ export default function Farms() {
     getAllData()
   },[account ,refreshFlag])
 
-  console.log("test for isLoading : " , isLoading , isLoading);
   async function getAllData(){
     setIsLoading2(true)
     await getTotalSupplyData()
@@ -107,6 +116,15 @@ export default function Farms() {
       setIsLoading(true)
       const contract = await stakecontractInstance()
       const data = await contract.earned(account)
+      if(Number(data) <=0)
+      {
+        setHarvestError('No reward available')
+        setHarvestDisable(true)
+      }
+      else {
+        setHarvestError('')
+        setHarvestDisable(false)
+      }
       setAvailableReward(Number(data))
     }
     catch(e){
@@ -168,8 +186,15 @@ export default function Farms() {
 
   async function handleStakeToken(amount : any){
     try{
-      setIsLoadingW(true)
-      await stakeToken(account , amount)
+      if(balanceOfStakingAmount < Number(ethers.utils.parseEther(amount)))
+      {
+        setStakeError('Insufficient balance')
+        throw("insufficient balance")
+      }
+        setStakeError('')
+        setIsLoadingW(true)
+        await stakeToken(account , amount)
+        setRefreshFlag(!refreshFlag)
     }
     catch(e)
     {
@@ -177,15 +202,20 @@ export default function Farms() {
       setIsLoadingW(false)
     }
     finally{
-      setRefreshFlag(!refreshFlag)
       setIsLoadingW(false)
     }
   }
 
   async function handleUnStakeToken(amount : any ){
     try{
+      if(stakedAmountOfToken < Number(ethers.utils.parseEther(amount))){
+        setUnStakeError('Not enough amount staked.')
+        throw("Not enough amount staked.")
+      }
+      setUnStakeError('')
       setIsLoadingW(true)
       await unStakeToken(account , amount)
+      setRefreshFlag(!refreshFlag)
     }
     catch(e)
     {
@@ -193,7 +223,6 @@ export default function Farms() {
       setIsLoadingW(false)
     }
     finally{
-      setRefreshFlag(!refreshFlag)
       setIsLoadingW(false)
     }
   }
@@ -201,7 +230,11 @@ export default function Farms() {
   async function handleHarvestToken(){
     try{
       setIsLoadingW(true)
+      if(availableReward <=0){
+        throw('No reward available.')
+      }
       await harvestToken(account)
+      setRefreshFlag(!refreshFlag)
     }
     catch(e)
     {
@@ -209,7 +242,6 @@ export default function Farms() {
       setIsLoadingW(false)
     }
     finally{
-      setRefreshFlag(!refreshFlag)
       setIsLoadingW(false)
 
     }
@@ -218,8 +250,14 @@ export default function Farms() {
   async function handleTogleClose(){
     setStakeInputValue('')
     setUnStakeInputValue('')
+    setStakeError('')
+    setHarvestError('')
+    setUnStakeError('')
+    setActionButtonEnable(false)
     toggleActionModal()
   }
+
+//styles 
 
   const Container = styled.div`
     width:180vh;
@@ -234,11 +272,6 @@ export default function Farms() {
       width: auto; /* Adjust padding for smaller screens */
     }
   `;
-
-
-
- 
-
  
   const AccordionContentWrapper = styled.div`
     display: flex;
@@ -310,6 +343,7 @@ export default function Farms() {
     font-weight:bold;
     color : ${({ theme }) => theme.primary1}
   `;
+
   const StyledFetchFont = styled.div`
     padding-left: 10px;
     font-weight:bold;
@@ -323,9 +357,7 @@ export default function Farms() {
     align-items: center;
   
   `;
-
   
-
   const StyledRightColumn = styled.div`
     width: 100%;
     border: 2px solid ${({ theme }) => (theme.text3)};
@@ -346,8 +378,6 @@ export default function Farms() {
     color:${({ theme }) => (theme.text2)}
   `;
 
- 
-
   const StyledMobileWidthDiv = styled.div`
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -360,11 +390,6 @@ export default function Farms() {
   padding: 0.5rem;
   margin-bottom: 0.5rem;
 `;
-
-
- 
-
-
 
   const MobileCard = styled.div`
   background-color: transparent;
@@ -403,7 +428,7 @@ export default function Farms() {
   :focus {
     outline: none;
   }
-`
+`;
 
   const Text = styled.p`
   flex: 1 1 auto;
@@ -414,9 +439,7 @@ export default function Farms() {
   font-size: 1rem;
   width: fit-content;
   font-weight: 500;
-`
-
- 
+`;
 
   const Web3StatusError = styled(Web3StatusGeneric)`
   background-color: ${({ theme }) => theme.red1};
@@ -427,16 +450,14 @@ export default function Farms() {
   :focus {
     background-color: ${({ theme }) => darken(0.1, theme.red1)};
   }
-`
-
-
+`;
 
   const NetworkIcon = styled(Activity)`
   margin-left: 0.25rem;
   margin-right: 0.5rem;
   width: 16px;
   height: 16px;
-`
+`;
 
   const Web3StatusConnect = styled(Web3StatusGeneric) <{ faded?: boolean }>`
   background-color: ${({ theme }) => theme.primary1};
@@ -464,7 +485,8 @@ export default function Farms() {
         color: ${({ theme }) => darken(0.05, theme.bg1)};
       }
     `}
-`
+`;
+
   const ActionButton = styled(Web3StatusGeneric) <{ faded?: boolean }>`
 background-color: ${({ theme }) => theme.primary1};
 border: none;
@@ -493,7 +515,8 @@ ${({ faded }) =>
       color: ${({ theme }) => darken(0.05, theme.bg1)};
     }
   `}
-`
+`;
+
 
   const UpperSection = styled.div`
   position: relative;
@@ -513,7 +536,7 @@ ${({ faded }) =>
     margin-top: 0;
     font-weight: 500;
   }
-`
+`;
 
   const CloseIcon = styled.div`
   position: absolute;
@@ -523,13 +546,13 @@ ${({ faded }) =>
     cursor: pointer;
     opacity: 0.6;
   }
-`
+`;
 
   const CloseColor = styled(Close)`
   path {
     stroke: ${({ theme }) => theme.text4};
   }
-`
+`;
 
   const HeaderRow = styled.div`
   ${({ theme }) => theme.flexRowNoWrap};
@@ -585,19 +608,7 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
   }
 `;
 
-
- 
-
-  const actionModalOpen = useActiontModalOpen()
-  const toggleActionModal = useActionModalToggle()
-
-  const handleModal = (action: string) => {
-    toggleActionModal()
-    setActionValue(action)
-  }
-
-
-  // Button styled component
+// Button styled component
   const Button = styled.div`
   background: ${({ theme }) => (theme.bg3)};
   border: 0;
@@ -659,8 +670,7 @@ background: ${({ theme }) => (theme.primary1)};
   }
 `;
 
-
-
+ 
   function Web3StatusInner() {
     const { t } = useTranslation()
     const { account,  error } = useWeb3React()
@@ -671,7 +681,7 @@ background: ${({ theme }) => (theme.primary1)};
       return (
         <ActionButtonContainer>
           <ButtonContainer>
-            <ActionButton onClick={() => handleModal('Stack')}>Stack</ActionButton>
+            <ActionButton onClick={() => handleModal('Stake')}>Stake</ActionButton>
             <ActionButton onClick={() => handleModal('Unstack')}>Unstack</ActionButton>
           </ButtonContainer>
           <SingleButtonContainer>
@@ -706,7 +716,6 @@ background: ${({ theme }) => (theme.primary1)};
   };
 
  
-
   useEffect(() => {
     window.addEventListener('resize', handleResize);
 
@@ -723,10 +732,16 @@ background: ${({ theme }) => (theme.primary1)};
 
   }, [windowWidth])
 
+  const actionModalOpen = useActiontModalOpen()
+  const toggleActionModal = useActionModalToggle()
+  const handleModal = (action: string) => {
+    toggleActionModal()
+    setActionValue(action)
+  }
 
 
   const handleMaxClick = (actionValue :any) => {
-    if(actionValue === 'Stack')
+    if(actionValue === 'Stake')
       setStakeInputValue((balanceOfStakingAmount/DECIMAL).toString());
     else  
       setUnStakeInputValue((stakedAmountOfToken/DECIMAL).toString())
@@ -734,11 +749,68 @@ background: ${({ theme }) => (theme.primary1)};
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>,actionvalue : any) => {
-    if(actionvalue === 'Stack')
-      setStakeInputValue(e.target.value);
-    else
-      setUnStakeInputValue(e.target.value)
-      // Set focus to Max button after input change
+    const inputValue = e.target.value;
+    const isNumeric = /^\d*\.?\d*$/.test(inputValue);
+    
+    if (isNumeric) {
+        if (actionvalue === 'Stake')
+          {
+            setStakeInputValue(inputValue);
+            console.log(balanceOfStakingAmount ,Number(ethers.utils.parseEther(inputValue || '0')) ,inputValue);
+            
+            if(Number(inputValue) > 0)
+            {
+              if(balanceOfStakingAmount > Number(ethers.utils.parseEther(inputValue)))
+              {
+                console.log('button enable');
+                setActionError('')
+                setActionButtonEnable(true)
+                
+              }
+              else{
+                console.log('button disable');
+                setActionError('Insufficient amount')
+                setActionButtonEnable(false)
+              }
+
+            }
+            else{
+              console.log('button disable');
+              setActionError('')
+              setActionButtonEnable(false)
+            }
+          } 
+
+        else
+        {
+          setUnStakeInputValue(inputValue);
+          console.log(balanceOfStakingAmount ,Number(ethers.utils.parseEther(inputValue || '0')) ,inputValue);
+          
+          if(Number(inputValue) > 0)
+          {
+            if(stakedAmountOfToken >= Number(ethers.utils.parseEther(inputValue)))
+            {
+              console.log('button enable');
+              setActionError('')
+              setActionButtonEnable(true)
+              
+            }
+            else{
+              console.log('button disable');
+              setActionError('Insufficient staked amount')
+              setActionButtonEnable(false)
+            }
+
+          }
+          else{
+            console.log('button disable');
+            setActionError('')
+            setActionButtonEnable(false)
+          }
+        } 
+
+    }
+    
   };
 
   const handleCloseDialog = () =>{
@@ -758,21 +830,21 @@ background: ${({ theme }) => (theme.primary1)};
           <ContentWrapper>
             <RewardRow>Available Reward :{availableReward/DECIMAL}</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton disabled={isLoadingW} onClick={()=>handleHarvestToken()}>{isLoadingW?<Loader stroke={'#000000'}/> : actionValue}</ActionButton>
+              <ActionButton disabled={harvestDisable} onClick={()=>handleHarvestToken()}>{!harvestError ?isLoadingW?<Loader stroke={'#000000'}/> : actionValue:harvestError}</ActionButton>
             </div>
           </ContentWrapper>
           :
           <ContentWrapper>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button>Available : {actionValue=== 'Stack' ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE) :(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</Button>
+              <Button>Available : {actionValue=== 'Stake' ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE) :(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</Button>
             </div>
-            {/* <Input placeholder="Enter something..." /> */}
             <FormWrapper>
               <MaxButton onClick={()=>{handleMaxClick(actionValue)}}>Max</MaxButton>
-              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={actionValue ==='Stack'? inputStakeValue : inputUnStakeValue} onChange={(e)=>{handleChange(e,actionValue)}} />
+              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={actionValue ==='Stake'? inputStakeValue : inputUnStakeValue} onChange={(e)=>{handleChange(e,actionValue)}} />
             </FormWrapper>
+            {/* <span style={{color:"red" , margin : "10px"}}>{actionValue ==='Stake' ? stakeError : unStakeError}</span> */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton disabled={isLoadingW} onClick={()=> {actionValue ==='Stack' ? handleStakeToken(inputStakeValue) : handleUnStakeToken(inputUnStakeValue)} }>{isLoadingW?<Loader stroke={'#000000'}/> : actionValue}</ActionButton>
+              <ActionButton  disabled={!actionButtonEnable} onClick={()=> {actionValue ==='Stake' ? handleStakeToken(inputStakeValue) : handleUnStakeToken(inputUnStakeValue)} }>{!actionError ? isLoadingW?<Loader stroke={'#000000'}/> : actionValue : actionError}</ActionButton>
             </div>
           </ContentWrapper>}
       </UpperSection>
