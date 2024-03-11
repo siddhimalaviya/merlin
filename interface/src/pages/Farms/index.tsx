@@ -13,10 +13,10 @@ import styled, { css, keyframes } from 'styled-components'
 import { useActionModalToggle, useActiontModalOpen } from '../../state/actionButton/hooks';
 import ActionModal from '../../components/ActionButton';
 import {
-  stakecontractInstance ,
-  StakingContractAddress ,
-  LPTokenContractInstance ,
-  getStakingLiquidity ,
+  stakecontractInstance,
+  StakingContractAddress,
+  LPTokenContractInstance,
+  getStakingLiquidity,
   DECIMAL,
   FIXED_PERCENTAGE,
   FIAT_FIXED_PERCENTAGE,
@@ -24,14 +24,14 @@ import {
   unStakeToken,
   harvestToken,
   BRAND_NAME
-  } from './stakeConstant'
+} from './stakeConstant'
 import { useActiveWeb3React } from '../../hooks'
 import Loader from '../../components/Loader';
 import { ethers } from "ethers";
 
 export default function Farms() {
 
-  const [accordionOpen, setAccordionOpen] = useState<number | null>(0);
+  const [accordionOpen, setAccordionOpen] = useState<number | null>(1);
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [actionValue, setActionValue] = useState('');
@@ -41,33 +41,33 @@ export default function Farms() {
   const { account } = useActiveWeb3React()
 
   //error states
-  const [stakeError ,setStakeError] = useState('')
-  const [unStakeError , setUnStakeError] =useState('')
-  const [harvestError , setHarvestError] = useState('')
-  const [harvestDisable , setHarvestDisable] = useState(true)       
-  const [actionButtonEnable , setActionButtonEnable ] = useState(false)
-  const [actionError , setActionError ] = useState('')
+  const [stakeError, setStakeError] = useState('')
+  const [unStakeError, setUnStakeError] = useState('')
+  const [harvestError, setHarvestError] = useState('')
+  const [harvestDisable, setHarvestDisable] = useState(true)
+  const [actionButtonEnable, setActionButtonEnable] = useState(false)
+  const [actionError, setActionError] = useState('')
 
   //LOadewr state
-  const [refreshFlag ,setRefreshFlag] =useState(false)
-  const [isLoading , setIsLoading] = useState(false)
-  const [isLoading2 , setIsLoading2] = useState(true)
-  const [isLoadingW ,setIsLoadingW ] = useState(false)
-  
+  const [refreshFlag, setRefreshFlag] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading2, setIsLoading2] = useState(true)
+  const [isLoadingW, setIsLoadingW] = useState(false)
+
   //data of staking in contract 
-  const [totalTokenSupply, setTotalTokenSupply ] = useState(0)
-  const [stakedAmountOfToken , setstakedAmountOfToken] = useState(0)
-  const [availableReward , setAvailableReward ] = useState(0)
-  const [totalLPToken ,setTotalLPToken ] = useState(0)
-  const [balanceOfStakingAmount , setBalanceOfStakingAmount] = useState(0)
-  const [totalStackLiquidityInUSD ,setTotalStackLiquidityInUSD] = useState(0)
-  const [apyPercentage ,setAPYPercentage] = useState(0)
+  const [totalTokenSupply, setTotalTokenSupply] = useState(0)
+  const [stakedAmountOfToken, setstakedAmountOfToken] = useState(0)
+  const [availableReward, setAvailableReward] = useState(0)
+  const [totalLPToken, setTotalLPToken] = useState(0)
+  const [balanceOfStakingAmount, setBalanceOfStakingAmount] = useState(0)
+  const [totalStackLiquidityInUSD, setTotalStackLiquidityInUSD] = useState(0)
+  const [apyPercentage, setAPYPercentage] = useState(0)
 
-  useEffect(()=>{
+  useEffect(() => {
     getAllData()
-  },[account ,refreshFlag])
+  }, [account, refreshFlag])
 
-  async function getAllData(){
+  async function getAllData() {
     setIsLoading2(true)
     await getTotalSupplyData()
     await getStakedAmount()
@@ -78,46 +78,45 @@ export default function Farms() {
     setIsLoading2(false)
   }
 
-  async function getTotalSupplyData(){
-    try{
+  async function getTotalSupplyData() {
+    try {
       setIsLoading(true)
       const contract = await stakecontractInstance()
       const data = await contract.totalSupply()
       setTotalTokenSupply(Number(data))
     }
-    catch(e){
+    catch (e) {
       console.log("Error getting data");
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
-    
+
   }
 
-  async function getStakedAmount(){
-    try{
+  async function getStakedAmount() {
+    try {
       setIsLoading(true)
       const contract = await stakecontractInstance()
       const data = await contract.balanceOf(account)
       setstakedAmountOfToken(Number(data))
     }
-    catch(e){
+    catch (e) {
       console.log("Error getting data");
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
   }
 
-  async function getAvailableReward(){
-    try{
+  async function getAvailableReward() {
+    try {
       setIsLoading(true)
       const contract = await stakecontractInstance()
       const data = await contract.earned(account)
-      if(Number(data) <=0)
-      {
+      if (Number(data) <= 0) {
         setHarvestError('No reward available')
         setHarvestDisable(true)
       }
@@ -127,127 +126,123 @@ export default function Farms() {
       }
       setAvailableReward(Number(data))
     }
-    catch(e){
+    catch (e) {
       console.log("Error getting data");
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
   }
 
-  async function getTotalLiquidityValue(){
-    try{
+  async function getTotalLiquidityValue() {
+    try {
       setIsLoading(true)
       const data = await getStakingLiquidity()
       setTotalStackLiquidityInUSD(Number(data?.totalLiquidityValue))
       setAPYPercentage(Number(data?.APYPercentage))
     }
-    catch(e){
-      console.log("Error getting Liquidity value : ",e);
+    catch (e) {
+      console.log("Error getting Liquidity value : ", e);
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
   }
 
-  async function getTotalLPToken(){
-    try{
+  async function getTotalLPToken() {
+    try {
       setIsLoading(true)
       const contract = await LPTokenContractInstance()
       const data = await contract.balanceOf(StakingContractAddress)
       setTotalLPToken(Number(data))
     }
-    catch(e){
+    catch (e) {
       console.log("Error getting data");
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
   }
 
-  async function getBalanceOfStakingAmount(){
-    try{
+  async function getBalanceOfStakingAmount() {
+    try {
       setIsLoading(true)
       const contract = await LPTokenContractInstance()
       const data = await contract.balanceOf(account)
       setBalanceOfStakingAmount(Number(data))
     }
-    catch(e){
+    catch (e) {
       console.log("Error getting data");
       setIsLoading(false)
     }
-    finally{
+    finally {
       setIsLoading(false)
     }
   }
 
-  async function handleStakeToken(amount : any){
-    try{
-      if(balanceOfStakingAmount < Number(ethers.utils.parseEther(amount)))
-      {
+  async function handleStakeToken(amount: any) {
+    try {
+      if (balanceOfStakingAmount < Number(ethers.utils.parseEther(amount))) {
         setStakeError('Insufficient balance')
-        throw("insufficient balance")
+        throw ("insufficient balance")
       }
-        setStakeError('')
-        setIsLoadingW(true)
-        await stakeToken(account , amount)
-        setRefreshFlag(!refreshFlag)
+      setStakeError('')
+      setIsLoadingW(true)
+      await stakeToken(account, amount)
+      setRefreshFlag(!refreshFlag)
     }
-    catch(e)
-    {
-      console.log("Error staking token :" ,e);
+    catch (e) {
+      console.log("Error staking token :", e);
       setIsLoadingW(false)
     }
-    finally{
+    finally {
       setIsLoadingW(false)
     }
   }
 
-  async function handleUnStakeToken(amount : any ){
-    try{
-      if(stakedAmountOfToken < Number(ethers.utils.parseEther(amount))){
+  async function handleUnStakeToken(amount: any) {
+    try {
+      if (stakedAmountOfToken < Number(ethers.utils.parseEther(amount))) {
         setUnStakeError('Not enough amount staked.')
-        throw("Not enough amount staked.")
+        throw ("Not enough amount staked.")
       }
       setUnStakeError('')
       setIsLoadingW(true)
-      await unStakeToken(account , amount)
+      await unStakeToken(account, amount)
       setRefreshFlag(!refreshFlag)
     }
-    catch(e)
-    {
-      console.log("Error unstaking token :" ,e);
+    catch (e) {
+      console.log("Error unstaking token :", e);
       setIsLoadingW(false)
     }
-    finally{
+    finally {
       setIsLoadingW(false)
     }
   }
 
-  async function handleHarvestToken(){
-    try{
+  async function handleHarvestToken() {
+    try {
       setIsLoadingW(true)
-      if(availableReward <=0){
-        throw('No reward available.')
+      if (availableReward <= 0) {
+        throw ('No reward available.')
       }
       await harvestToken(account)
       setRefreshFlag(!refreshFlag)
     }
-    catch(e)
-    {
-      console.log("Error withdrawing reward token :" ,e);
+    catch (e) {
+      console.log("Error withdrawing reward token :", e);
       setIsLoadingW(false)
     }
-    finally{
+    finally {
       setIsLoadingW(false)
 
     }
   }
-  
-  async function handleTogleClose(){
+
+  async function handleTogleClose() {
     setStakeInputValue('')
     setUnStakeInputValue('')
     setStakeError('')
@@ -257,7 +252,7 @@ export default function Farms() {
     toggleActionModal()
   }
 
-//styles 
+  //styles 
 
   const Container = styled.div`
     width:180vh;
@@ -272,7 +267,7 @@ export default function Farms() {
       width: auto; /* Adjust padding for smaller screens */
     }
   `;
- 
+
   const AccordionContentWrapper = styled.div`
     display: flex;
     padding: 1.5rem;
@@ -357,7 +352,7 @@ export default function Farms() {
     align-items: center;
   
   `;
-  
+
   const StyledRightColumn = styled.div`
     width: 100%;
     border: 2px solid ${({ theme }) => (theme.text3)};
@@ -597,9 +592,9 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
   const StyledInput = styled.input`
   border-radius: 10px;
   padding: 12px;
-  margin: 20px 0px;
-  background-color: ${({ theme }) =>  theme.bg1};
-  color: ${({ theme }) =>  theme.text1};
+  margin: 10px 0px;
+  background-color: ${({ theme }) => theme.bg1};
+  color: ${({ theme }) => theme.text1};
   width: 100%;
   font-size: 17px;
   border: 1px solid gray;
@@ -608,7 +603,7 @@ ${({ theme }) => theme.mediaWidth.upToMedium`
   }
 `;
 
-// Button styled component
+  // Button styled component
   const Button = styled.div`
   background: ${({ theme }) => (theme.bg3)};
   border: 0;
@@ -661,7 +656,7 @@ background: ${({ theme }) => (theme.primary1)};
   border-radius: 7px;
   color:${({ theme }) => (theme.bg1)};
   position:absolute;
-  top:28px;
+  top:18px;
   right:8px;
   padding: 5px 10px;
   cursor:pointer;
@@ -670,10 +665,10 @@ background: ${({ theme }) => (theme.primary1)};
   }
 `;
 
- 
+
   function Web3StatusInner() {
     const { t } = useTranslation()
-    const { account,  error } = useWeb3React()
+    const { account, error } = useWeb3React()
 
     const toggleWalletModal = useWalletModalToggle()
 
@@ -681,8 +676,8 @@ background: ${({ theme }) => (theme.primary1)};
       return (
         <ActionButtonContainer>
           <ButtonContainer>
-            <ActionButton onClick={() => handleModal('Stake')}>Stake</ActionButton>
-            <ActionButton onClick={() => handleModal('Unstack')}>Unstack</ActionButton>
+            <ActionButton onClick={() => handleModal('Stake')}>Stake LP</ActionButton>
+            <ActionButton onClick={() => handleModal('Unstake')}>Unstake LP</ActionButton>
           </ButtonContainer>
           <SingleButtonContainer>
             <ActionButton onClick={() => handleModal('Harvest')}>Harvest</ActionButton>
@@ -715,7 +710,7 @@ background: ${({ theme }) => (theme.primary1)};
     setWindowWidth(window.innerWidth);
   };
 
- 
+
   useEffect(() => {
     window.addEventListener('resize', handleResize);
 
@@ -740,80 +735,74 @@ background: ${({ theme }) => (theme.primary1)};
   }
 
 
-  const handleMaxClick = (actionValue :any) => {
-    if(actionValue === 'Stake')
-      setStakeInputValue((balanceOfStakingAmount/DECIMAL).toString());
-    else  
-      setUnStakeInputValue((stakedAmountOfToken/DECIMAL).toString())
+  const handleMaxClick = (actionValue: any) => {
+    if (actionValue === 'Stake')
+      setStakeInputValue((balanceOfStakingAmount / DECIMAL).toString());
+    else
+      setUnStakeInputValue((stakedAmountOfToken / DECIMAL).toString())
 
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>,actionvalue : any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, actionvalue: any) => {
     const inputValue = e.target.value;
     const isNumeric = /^\d*\.?\d*$/.test(inputValue);
-    
+
     if (isNumeric) {
-        if (actionvalue === 'Stake')
-          {
-            setStakeInputValue(inputValue);
-            console.log(balanceOfStakingAmount ,Number(ethers.utils.parseEther(inputValue || '0')) ,inputValue);
-            
-            if(Number(inputValue) > 0)
-            {
-              if(balanceOfStakingAmount > Number(ethers.utils.parseEther(inputValue)))
-              {
-                console.log('button enable');
-                setActionError('')
-                setActionButtonEnable(true)
-                
-              }
-              else{
-                console.log('button disable');
-                setActionError('Insufficient amount')
-                setActionButtonEnable(false)
-              }
+      if (actionvalue === 'Stake') {
+        setStakeInputValue(inputValue);
+        console.log(balanceOfStakingAmount, Number(ethers.utils.parseEther(inputValue || '0')), inputValue);
 
-            }
-            else{
-              console.log('button disable');
-              setActionError('')
-              setActionButtonEnable(false)
-            }
-          } 
-
-        else
-        {
-          setUnStakeInputValue(inputValue);
-          console.log(balanceOfStakingAmount ,Number(ethers.utils.parseEther(inputValue || '0')) ,inputValue);
-          
-          if(Number(inputValue) > 0)
-          {
-            if(stakedAmountOfToken >= Number(ethers.utils.parseEther(inputValue)))
-            {
-              console.log('button enable');
-              setActionError('')
-              setActionButtonEnable(true)
-              
-            }
-            else{
-              console.log('button disable');
-              setActionError('Insufficient staked amount')
-              setActionButtonEnable(false)
-            }
+        if (Number(inputValue) > 0) {
+          if (balanceOfStakingAmount > Number(ethers.utils.parseEther(inputValue))) {
+            console.log('button enable');
+            setActionError('')
+            setActionButtonEnable(true)
 
           }
-          else{
+          else {
             console.log('button disable');
-            setActionError('')
+            setActionError('Insufficient amount')
             setActionButtonEnable(false)
           }
-        } 
+
+        }
+        else {
+          console.log('button disable');
+          setActionError('')
+          setActionButtonEnable(false)
+        }
+      }
+
+      else {
+        setUnStakeInputValue(inputValue);
+        console.log(balanceOfStakingAmount, Number(ethers.utils.parseEther(inputValue || '0')), inputValue);
+
+        if (Number(inputValue) > 0) {
+          if (stakedAmountOfToken >= Number(ethers.utils.parseEther(inputValue))) {
+            console.log('button enable');
+            setActionError('')
+            setActionButtonEnable(true)
+
+          }
+          else {
+            console.log('button disable');
+            setActionError('Insufficient staked amount')
+            setActionButtonEnable(false)
+          }
+
+        }
+        else {
+          console.log('button disable');
+          setActionError('')
+          setActionButtonEnable(false)
+        }
+      }
 
     }
-    
+
   };
 
-  const handleCloseDialog = () =>{
+  const handleCloseDialog = () => {
     setStakeInputValue('')
     toggleActionModal()
   }
@@ -828,23 +817,22 @@ background: ${({ theme }) => (theme.primary1)};
 
         {actionValue === 'Harvest' ?
           <ContentWrapper>
-            <RewardRow>Available Reward :{availableReward/DECIMAL}</RewardRow>
+            <RewardRow>Available Reward : {availableReward / DECIMAL}</RewardRow>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton disabled={harvestDisable} onClick={()=>handleHarvestToken()}>{!harvestError ?isLoadingW?<Loader stroke={'#000000'}/> : actionValue:harvestError}</ActionButton>
+              <ActionButton disabled={harvestDisable} onClick={() => handleHarvestToken()}>{!harvestError ? isLoadingW ? <Loader stroke={'#000000'} /> : actionValue : harvestError}</ActionButton>
             </div>
           </ContentWrapper>
           :
           <ContentWrapper>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button>Available : {actionValue=== 'Stake' ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE) :(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE)}</Button>
+              <Button>Available : {actionValue === 'Stake' ? (balanceOfStakingAmount / DECIMAL).toFixed(FIXED_PERCENTAGE) : (stakedAmountOfToken / DECIMAL).toFixed(FIXED_PERCENTAGE)}</Button>
             </div>
             <FormWrapper>
-              <MaxButton onClick={()=>{handleMaxClick(actionValue)}}>Max</MaxButton>
-              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={actionValue ==='Stake'? inputStakeValue : inputUnStakeValue} onChange={(e)=>{handleChange(e,actionValue)}} />
+              <MaxButton onClick={() => { handleMaxClick(actionValue) }}>Max</MaxButton>
+              <StyledInput placeholder={`Enter ${actionValue} Amount`} value={actionValue === 'Stake' ? inputStakeValue : inputUnStakeValue} onChange={(e) => { handleChange(e, actionValue) }} />
             </FormWrapper>
-            {/* <span style={{color:"red" , margin : "10px"}}>{actionValue ==='Stake' ? stakeError : unStakeError}</span> */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <ActionButton  disabled={!actionButtonEnable} onClick={()=> {actionValue ==='Stake' ? handleStakeToken(inputStakeValue) : handleUnStakeToken(inputUnStakeValue)} }>{!actionError ? isLoadingW?<Loader stroke={'#000000'}/> : actionValue : actionError}</ActionButton>
+              <ActionButton disabled={!actionButtonEnable} onClick={() => { actionValue === 'Stake' ? handleStakeToken(inputStakeValue) : handleUnStakeToken(inputUnStakeValue) }}>{!actionError ? isLoadingW ? <Loader stroke={'#000000'} /> : `${actionValue} LP` : actionError}</ActionButton>
             </div>
           </ContentWrapper>}
       </UpperSection>
@@ -853,38 +841,100 @@ background: ${({ theme }) => (theme.primary1)};
 
   return (
     <Container>
-    
+
       {isMobile ?
-        
+
         <MobileMainCard>
-          {isLoading2 ?  <>
-            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
-              <Loader size='80px'/>
+          {isLoading2 ? <>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '10px', padding: '40px' }}>
+              <Loader size='80px' />
             </div>
-            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
-            <StyledFetchFont>Fetching Data...</StyledFetchFont>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '10px', padding: '40px' }}>
+              <StyledFetchFont>Fetching Data...</StyledFetchFont>
             </div>
-           </> : 
-          <div onClick={() => toggleAccordion(0)}>
-            <MobileCard>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          </> :
+            <div onClick={() => toggleAccordion(0)}>
+              <MobileCard>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-                <StyledMobileWidthDiv>{BRAND_NAME} V2 LP</StyledMobileWidthDiv>
+                  <StyledMobileWidthDiv>{BRAND_NAME} V2 LP</StyledMobileWidthDiv>
 
-                <StyledMobilePercentageBadge>0.3%</StyledMobilePercentageBadge>
+                  <StyledMobilePercentageBadge>0.3%</StyledMobilePercentageBadge>
+                  <div  >
+                    {accordionOpen !== 0 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
+                  </div>
+                </div>
+                {accordionOpen === 0 && (
+                  <StyledBlackBorderDiv open={accordionOpen === 0}>
+                    <div style={{ margin: '10px' }}>
+                      <div style={{ margin: '10px' }}>APY : Up to {account ? parseInt(apyPercentage.toString()) : ''} %</div>
+                      <div style={{ margin: '10px' }}>Staked Liquidity : ${account ? totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE) : ''}</div>
+                      <div style={{ margin: '10px' }}>Available LP : {account ? (balanceOfStakingAmount / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</div>
+                      <div style={{ margin: '10px' }}>Available Reward : {account ? (availableReward / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</div>
+                      <div style={{ margin: '10px' }}>Staked LP : {account ? (stakedAmountOfToken / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</div>
+                    </div>
+                    <StyledContainer>
+                      <StyledRightColumn>
+                        <StyledButtonContainer>
+                          <StyledParagraph>START FARMING</StyledParagraph>
+                          <Web3StatusInner />
+                        </StyledButtonContainer>
+                      </StyledRightColumn>
+                    </StyledContainer>
+                  </StyledBlackBorderDiv>
+                )
+                }
+              </MobileCard>
+            </div>
+          }
+        </MobileMainCard> :
+
+
+
+        <Card>
+          {isLoading2
+            ?
+            <>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '10px', padding: '40px' }}>
+                <Loader size='80px' />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '10px', padding: '40px' }}>
+                <StyledFetchFont>Fetching Data...</StyledFetchFont>
+              </div>
+            </>
+            :
+            <>
+              <AccordionContentWrapper onClick={() => toggleAccordion(0)}>
+                <StyledWidthDiv>{BRAND_NAME} V2 LP</StyledWidthDiv>
+                <StyledPercentageBadge >
+                  0.3%
+                </StyledPercentageBadge>
+                <StyledTable>
+                  <thead>
+                    <tr>
+                      <th>APY</th>
+                      <th>Staked Liquidity</th>
+                      <th>Available LP</th>
+                      <th>Available Reward</th>
+                      <th>Staked LP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Up to {account ? parseInt(apyPercentage.toString()) : ''} %</td>
+                      <td>${account ? totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE) : ''}</td>
+                      <td>{account ? (balanceOfStakingAmount / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</td>
+                      <td>{account ? (availableReward / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</td>
+                      <td>{account ? (stakedAmountOfToken / DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</td>
+                    </tr>
+                  </tbody>
+                </StyledTable>
                 <div  >
                   {accordionOpen !== 0 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
                 </div>
-              </div>
+              </AccordionContentWrapper>
               {accordionOpen === 0 && (
                 <StyledBlackBorderDiv open={accordionOpen === 0}>
-                  <div style={{ margin: '10px' }}>
-                    <div style={{ margin: '10px' }}>APY : Up to {account ? parseInt(apyPercentage.toString()) : ''} %</div>
-                    <div style={{ margin: '10px' }}>Staked Liquidity : ${account ? totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE) : ''}</div>
-                    <div style={{ margin: '10px' }}>Available LP : {account ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</div>
-                    <div style={{ margin: '10px' }}>Available Reward : {account ?(availableReward /DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</div>
-                    <div style={{ margin: '10px' }}>Staked LP : {account ?(stakedAmountOfToken/DECIMAL).toFixed(FIXED_PERCENTAGE):'00'}</div>
-                  </div>
                   <StyledContainer>
                     <StyledRightColumn>
                       <StyledButtonContainer>
@@ -894,73 +944,11 @@ background: ${({ theme }) => (theme.primary1)};
                     </StyledRightColumn>
                   </StyledContainer>
                 </StyledBlackBorderDiv>
-              )
-              }
-            </MobileCard>
-          </div>
-          }
-        </MobileMainCard> :
-       
-       
-       
-       <Card>
-          {isLoading2 
-           ?
-           <>
-            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
-              <Loader size='80px'/>
-            </div>
-            <div style={{display:'flex',justifyContent:'center', margin: '10px', padding :'40px'}}>
-            <StyledFetchFont>Fetching Data...</StyledFetchFont>
-            </div>
-           </>
-          :
-          <>
-          <AccordionContentWrapper onClick={() => toggleAccordion(0)}>
-            <StyledWidthDiv>{BRAND_NAME} V2 LP</StyledWidthDiv>
-            <StyledPercentageBadge >
-              0.3%
-            </StyledPercentageBadge>
-            <StyledTable>
-              <thead>
-                <tr>
-                  <th>APY</th>
-                  <th>Staked Liquidity</th>
-                  <th>Available LP</th>
-                  <th>Available Reward</th>
-                  <th>Staked LP</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Up to {account? parseInt(apyPercentage.toString()):''} %</td>
-                  <td>${account ?totalStackLiquidityInUSD.toFixed(FIAT_FIXED_PERCENTAGE): ''}</td>
-                  <td>{account ? (balanceOfStakingAmount/DECIMAL).toFixed(FIXED_PERCENTAGE): '00'}</td>
-                  <td>{account ?(availableReward/DECIMAL).toFixed(FIXED_PERCENTAGE) : '00'}</td>
-                  <td>{account ? (stakedAmountOfToken/ DECIMAL).toFixed(FIXED_PERCENTAGE):'00'}</td>
-                </tr>
-              </tbody>
-            </StyledTable>
-            <div  >
-              {accordionOpen !== 0 ? <ChevronDown size={24} /> : <ChevronUp size={24} />}
-            </div>
-          </AccordionContentWrapper>
-          {accordionOpen === 0 && (
-            <StyledBlackBorderDiv open={accordionOpen === 0}>
-              <StyledContainer>
-                <StyledRightColumn>
-                  <StyledButtonContainer>
-                    <StyledParagraph>START FARMING</StyledParagraph>
-                    <Web3StatusInner />
-                  </StyledButtonContainer>
-                </StyledRightColumn>
-              </StyledContainer>
-            </StyledBlackBorderDiv>
-          )}
-          </>}
+              )}
+            </>}
         </Card>
       }
-    
+
       <ActionModal isOpen={actionModalOpen} onDismiss={handleCloseDialog} minHeight={false} maxHeight={90}>
         <Wrapper>{getModalContent()}</Wrapper>
       </ActionModal>
